@@ -22,9 +22,10 @@ class ZipStream():
 
 
 def make_writer(fileobj, archive_format="zip"):
+    # TODO: add suport for .tar.gz format.
     if archive_format == "zip":
         zip_file = zipfile.ZipFile(fileobj, mode='w')
-        zip_file.add = zip_file.write  # Patch API to match that of tarfile
+        zip_file.add = zip_file.write
     else:
         raise ValueError(f"'{archive_format}' is not a valid archive format.")
     return zip_file
@@ -39,7 +40,7 @@ class ZipHandler(IPythonHandler):
     def get(self):
         zip_path = self.get_argument('zipPath')
         zip_token = self.get_argument('zipToken')
-        fmt = self.get_argument('format', 'zip')
+        archive_format = self.get_argument('format', 'zip')
 
         # We gonna send out event streams!
         self.set_header('content-type', 'application/octet-stream')
@@ -55,12 +56,13 @@ class ZipHandler(IPythonHandler):
         self.log.info('zipping')
 
         file_name = None
-        with make_writer(ZipStream(self), fmt) as zf:
+        archive_writer = make_writer(ZipStream(self), archive_format)
+        with archive_writer as writer:
             for root, dirs, files in os.walk(zip_path):
-                for file_ in files:
-                    file_name = os.path.join(root, file_)
-                    self.log.info("{}\n".format(file_name))
-                    zf.add(file_name, os.path.join(root[len(zip_path):], file_))
+                for filename in files:
+                    file_path = os.path.join(root, filename)
+                    self.log.info("{}\n".format(file_path))
+                    writer.add(file_path, os.path.join(root[len(zip_path):], file_))
 
         self.set_cookie("zipToken", zip_token)
         self.log.info('Finished zipping')
