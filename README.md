@@ -19,6 +19,12 @@ This extension is meant to be integrated into Jupyter so there is no JLab or PyP
 
 ## Development
 
+Install dependencies with conda:
+
+```bash
+conda env update -f environment.yml
+```
+
 For a development install (requires npm version 4 or later), do the following in the repository directory:
 
 ```bash
@@ -36,4 +42,10 @@ To rebuild the package and the JupyterLab app:
 ```bash
 npm run build
 jupyter lab build
+```
+
+Test the server extension:
+
+```bash
+pytest jupyter_archive/tests/
 ```

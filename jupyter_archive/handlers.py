@@ -21,48 +21,51 @@ class ZipStream():
         self.handler.flush()
 
 
-def make_writer(fileobj, archive_format="zip"):
+def make_writer(handler, archive_format="zip"):
     # TODO: add suport for .tar.gz format.
     if archive_format == "zip":
-        zip_file = zipfile.ZipFile(fileobj, mode='w')
-        zip_file.add = zip_file.write
+        fileobj = ZipStream(handler)
+        archive_file = zipfile.ZipFile(fileobj, mode='w')
+        archive_file.add = archive_file.write
     else:
-        raise ValueError(f"'{archive_format}' is not a valid archive format.")
-    return zip_file
+        raise ValueError("'{}' is not a valid archive format.".format(archive_format))
+    return archive_file
 
 
-class ZipHandler(IPythonHandler):
+class ArchiveHandler(IPythonHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @web.authenticated
     @gen.coroutine
     def get(self):
-        zip_path = self.get_argument('zipPath')
-        zip_token = self.get_argument('zipToken')
-        archive_format = self.get_argument('format', 'zip')
+
+        # TODO: Switch everything to pathlib.
+
+        archive_path = self.get_argument('archivePath')
+        archive_token = self.get_argument('archiveToken')
+        archive_format = self.get_argument('archiveFormat', 'zip')
+
+        archive_path = os.path.abspath(archive_path)
+        archive_name = os.path.basename(archive_path)
+        archive_filename = "{}.{}".format(archive_name, archive_format)
 
         # We gonna send out event streams!
         self.set_header('content-type', 'application/octet-stream')
         self.set_header('cache-control', 'no-cache')
         self.set_header(
             'content-disposition',
-            'attachment; filename=\"{}.{}\"'.format(zip_path or 'home', fmt)
+            'attachment; filename={}'.format(archive_filename)
         )
 
-        if zip_path == '':
-            zip_path = '.'
+        self.log.info('Archiving {}.'.format(archive_filename))
 
-        self.log.info('zipping')
-
-        file_name = None
-        archive_writer = make_writer(ZipStream(self), archive_format)
+        archive_writer = make_writer(self, archive_format)
         with archive_writer as writer:
-            for root, dirs, files in os.walk(zip_path):
+            for root, dirs, files in os.walk(archive_path):
                 for filename in files:
                     file_path = os.path.join(root, filename)
-                    self.log.info("{}\n".format(file_path))
-                    writer.add(file_path, os.path.join(root[len(zip_path):], file_))
+                    writer.add(file_path, os.path.join(root[len(archive_path):], filename))
 
-        self.set_cookie("zipToken", zip_token)
-        self.log.info('Finished zipping')
+        self.set_cookie("archiveToken", archive_token)
+        self.log.info('Finished archiving {}.'.format(archive_filename))
