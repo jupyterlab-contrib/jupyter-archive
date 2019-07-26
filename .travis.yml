@@ -10,6 +10,7 @@ install:
   - conda config --add channels conda-forge
   - conda update -q conda
   - conda info -a
+  - conda activate base
   - conda env update -f environment.yml
   - pip install -e .
 
