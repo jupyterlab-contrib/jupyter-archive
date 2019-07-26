@@ -30,8 +30,8 @@ conda env update -f environment.yml
 For a development install (requires npm version 4 or later), do the following in the repository directory:
 
 ```bash
-npm install
-npm run build
+jlpm
+jlpm build
 jupyter labextension link .
 
 # Install the server extension
@@ -39,14 +39,14 @@ pip install -e .
 jupyter serverextension enable --py jupyter_archive
 ```
 
-You can watch the extension directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
+You can watch the source directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
 
 ```bash
+# Watch the source directory in another terminal tab
+jlpm watch
+
 # Run jupyterlab in watch mode in one terminal tab
 jupyter lab --watch
-
-# Watch the jupyter-renderers directory
-npm run watch
 ```
 
 Test the server extension:

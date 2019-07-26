@@ -13,8 +13,8 @@ install:
   - conda env update -n base -f environment.yml
 
 script:
-  - npm install
-  - npm run build
+  - jlpm
+  - jlpm build
   - jupyter labextension link .
   - pip install -e .
   - jupyter serverextension enable --py jupyter_archive
