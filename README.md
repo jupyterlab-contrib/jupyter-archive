@@ -37,11 +37,14 @@ pip install -e .
 jupyter serverextension enable --py jupyter_archive
 ```
 
-To rebuild the package and the JupyterLab app:
+You can watch the jupyter-renderers directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
 
 ```bash
-npm run build
-jupyter lab build
+# Run jupyterlab in watch mode in one terminal tab
+jupyter lab --watch
+
+# Watch the jupyter-renderers directory
+npm run watch
 ```
 
 Test the server extension:

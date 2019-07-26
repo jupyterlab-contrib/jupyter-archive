@@ -8,3 +8,4 @@ dependencies:
     - cookiecutter
     - nodejs
     - git
+    - yarn
