@@ -1,5 +1,7 @@
 # jupyter-archive
 
+[![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
+
 Download folder as archive file.
 
 The extension is composed of two extensions:
