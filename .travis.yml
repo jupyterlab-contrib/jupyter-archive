@@ -10,7 +10,7 @@ install:
   - conda config --add channels conda-forge
   - conda update -q conda
   - conda info -a
-  - conda env update -f environment.yml
+  - conda env update -n base -f environment.yml
 
 script:
   - npm install
