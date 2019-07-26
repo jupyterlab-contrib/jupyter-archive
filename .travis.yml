@@ -1,4 +1,4 @@
-language: python
+language: c
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -10,9 +10,7 @@ install:
   - conda config --add channels conda-forge
   - conda update -q conda
   - conda info -a
-  - conda activate base
   - conda env update -f environment.yml
-  - pip install -e .
 
 script:
   - npm install
