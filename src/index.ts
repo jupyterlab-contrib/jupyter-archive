@@ -10,20 +10,43 @@ namespace CommandIDs {
   export const download_archive = 'filebrowser:download-archive';
 }
 
-/** Makes a HTTP request, sending a git command to the backend */
-function httpRequest(
-  url: string,
-  method: string,
-  request: Object
-): Promise<Response> {
-  let fullRequest = {
-    method: method,
-    body: JSON.stringify(request)
-  };
+function archiveRequest(
+  path: string,
+): Promise<void> {
 
-  let setting = ServerConnection.makeSettings();
-  let fullUrl = URLExt.join(setting.baseUrl, url);
-  return ServerConnection.makeRequest(fullUrl, fullRequest, setting);
+  // Generate a random token.
+  const rand = () => Math.random().toString(36).substr(2);
+  const token = (length: number) => (rand() + rand() + rand() + rand()).substr(0, length);
+
+  const settings = ServerConnection.makeSettings();
+
+  let url = URLExt.join(settings.baseUrl, "/archive-download");
+  url += `?archivePath=${path}&archiveToken=${token(20)}&archiveFormat=${'zip'}`;
+
+  const request = { method: 'GET' };
+
+  return ServerConnection.makeRequest(url, request, settings).then(response => {
+    if (response.status !== 200) {
+      throw new ServerConnection.ResponseError(response);
+    }
+
+    // Check the browser is Chrome https://stackoverflow.com/a/9851769
+    const chrome = (window as any).chrome;
+    const isChrome = !!chrome && (!!chrome.webstore || !!chrome.runtime);
+    if (isChrome) {
+      // Workaround https://bugs.chromium.org/p/chromium/issues/detail?id=455987
+      window.open(response.url);
+    } else {
+      let element = document.createElement('a');
+      document.body.appendChild(element);
+      element.setAttribute('href', response.url);
+      element.setAttribute('download', '');
+      element.click();
+      document.body.removeChild(element);
+
+      console.log(response);
+    }
+  });
 }
 
 /**
@@ -51,21 +74,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           var selected_folder = widget.selectedItems().next();
           if (selected_folder) {
             console.log('Download the archive!!!!');
-
-            // Generate a random token.
-            const rand = () => Math.random().toString(36).substr(2);
-            const token = (length: number) => (rand() + rand() + rand() + rand()).substr(0, length);
-
-            let body = Object();
-            body.archivePath = selected_folder.path;
-            body.archiveToken = token(20);
-            body.archiveFormat = 'zip';
-
-            try {
-              httpRequest('/archive-download/', 'GET', body);
-            } catch (err) {
-              throw ServerConnection.NetworkError;
-            }
+            archiveRequest(selected_folder.path);
           }
         }
       },
