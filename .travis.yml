@@ -18,4 +18,4 @@ script:
   - jupyter labextension link .
   - pip install -e .
   - jupyter serverextension enable --py jupyter_archive
-  - # pytest jupyter_archive
+  - pytest jupyter_archive/
