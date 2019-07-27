@@ -46,7 +46,7 @@ You can watch the source directory and run JupyterLab in watch mode to watch for
 jlpm watch
 
 # Run jupyterlab in watch mode in one terminal tab
-jupyter lab --watch
+jupyter lab --watch --no-browser --NotebookApp.token=''
 ```
 
 Test the server extension:
