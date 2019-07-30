@@ -6,9 +6,9 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --add channels conda-forge
-  - conda update -q conda
+  - conda update -y -q conda
   - conda info -a
-  - conda env update -n base -f environment.yml
+  - conda env update -y -n base -f environment.yml
 
 script:
   - jlpm
