@@ -8,7 +8,7 @@ install:
   - conda config --add channels conda-forge
   - conda update -y -q conda
   - conda info -a
-  - conda env update -y -n base -f environment.yml
+  - conda env update -n base -f environment.yml
 
 script:
   - jlpm
