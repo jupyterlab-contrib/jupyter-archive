@@ -72,7 +72,9 @@ const extension: JupyterFrontEndPlugin<void> = {
     const { tracker } = factory;
 
     // Add a JLab option.
-    let archiveFormat: string = 'zip';
+
+    // Must be 'zip', 'tgz', 'tbz' or 'txz'.
+    let archiveFormat: string = 'txz';
 
     // Does not work.
     // void settingRegistry
