@@ -58,12 +58,39 @@ class ArchiveHandlerTest(NotebookTestBase):
 
         # Try to download the created folder.
         archive_relative_path = os.path.basename(archive_dir_path)
-        url = 'archive-download?archivePath={}&archiveToken=564646'.format(archive_relative_path)
-        r = self.request('GET', url)
+        url_template = 'archive-download?archivePath={}&archiveToken=564646&archiveFormat={}'
 
+        url = url_template.format(archive_relative_path, 'zip')
+        r = self.request('GET', url)
         print(r)
         print(r.headers['content-type'])
-
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers['content-type'], 'application/octet-stream')
         self.assertEqual(r.headers['cache-control'], 'no-cache')
+
+        url = url_template.format(archive_relative_path, 'tgz')
+        r = self.request('GET', url)
+        print(r)
+        print(r.headers['content-type'])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers['content-type'], 'application/octet-stream')
+        self.assertEqual(r.headers['cache-control'], 'no-cache')
+
+
+        url = url_template.format(archive_relative_path, 'tbz')
+        r = self.request('GET', url)
+        print(r)
+        print(r.headers['content-type'])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers['content-type'], 'application/octet-stream')
+        self.assertEqual(r.headers['cache-control'], 'no-cache')
+
+
+        url = url_template.format(archive_relative_path, 'txz')
+        r = self.request('GET', url)
+        print(r)
+        print(r.headers['content-type'])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.headers['content-type'], 'application/octet-stream')
+        self.assertEqual(r.headers['cache-control'], 'no-cache')
+
