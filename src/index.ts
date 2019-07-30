@@ -6,13 +6,13 @@ import {
 import { each } from '@phosphor/algorithm';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ServerConnection } from '@jupyterlab/services';
-import { URLExt } from '@jupyterlab/coreutils';
+import { URLExt, ISettingRegistry } from '@jupyterlab/coreutils';
 
 namespace CommandIDs {
   export const download_archive = 'filebrowser:download-archive';
 }
 
-function archiveRequest(path: string): Promise<void> {
+function archiveRequest(path: string, archiveFormat: string): Promise<void> {
   // Generate a random token.
   const rand = () =>
     Math.random()
@@ -26,7 +26,7 @@ function archiveRequest(path: string): Promise<void> {
   let url = URLExt.join(settings.baseUrl, '/archive-download');
   url += `?archivePath=${path}`;
   url += `&archiveToken=${token(20)}`;
-  url += `&archiveFormat=${'zip'}`;
+  url += `&archiveFormat=${archiveFormat}`;
 
   const request = { method: 'GET' };
 
@@ -56,25 +56,42 @@ function archiveRequest(path: string): Promise<void> {
  * Initialization data for the jupyter-archive extension.
  */
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'jupyter-archive',
+  id: '@jupyterlab/archive:archive',
   autoStart: true,
 
-  requires: [IFileBrowserFactory],
+  requires: [IFileBrowserFactory, ISettingRegistry],
 
-  activate: (app: JupyterFrontEnd, factory: IFileBrowserFactory) => {
+  activate: (
+    app: JupyterFrontEnd,
+    factory: IFileBrowserFactory,
+    settingRegistry: ISettingRegistry,
+  ) => {
     console.log('JupyterLab extension jupyter-archive is activated!');
 
     const { commands } = app;
     const { tracker } = factory;
 
+    // Add a JLab option.
+    let archiveFormat: string = 'zip';
+
+    // Does not work.
+    // void settingRegistry
+    //   .load('@jupyterlab/archive:archive')
+    //   .then(settings => {
+    //     settings.changed.connect(settings => {
+    //       archiveFormat = settings.get('archiveFormat').composite as string;
+    //     });
+    //     archiveFormat = settings.get('archiveFormat').composite as string;
+    //   });
+
+    // Add the command to the file's menu.
     commands.addCommand(CommandIDs.download_archive, {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
           each(widget.selectedItems(), item => {
             if (item.type == 'directory') {
-              archiveRequest(item.path);
-              console.log(item.path);
+              archiveRequest(item.path, archiveFormat);
             }
           });
         }

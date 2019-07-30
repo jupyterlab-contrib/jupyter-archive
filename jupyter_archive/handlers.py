@@ -1,5 +1,6 @@
 import os
 import zipfile
+import tarfile
 
 from tornado import gen, web
 from notebook.base.handlers import IPythonHandler
@@ -22,11 +23,13 @@ class ZipStream():
 
 
 def make_writer(handler, archive_format="zip"):
-    # TODO: add suport for .tar.gz format.
+    fileobj = ZipStream(handler)
+
     if archive_format == "zip":
-        fileobj = ZipStream(handler)
         archive_file = zipfile.ZipFile(fileobj, mode='w')
         archive_file.add = archive_file.write
+    elif archive_format == "tgz":
+        archive_file = tarfile.TarFile(fileobj=fileobj, mode='w')
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
     return archive_file
