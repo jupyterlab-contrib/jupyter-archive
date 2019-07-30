@@ -24,9 +24,9 @@ function archiveRequest(path: string): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
   let url = URLExt.join(settings.baseUrl, '/archive-download');
-  url += `?archivePath=${path}&archiveToken=${token(
-    20,
-  )}&archiveFormat=${'zip'}`;
+  url += `?archivePath=${path}`;
+  url += `&archiveToken=${token(20)}`;
+  url += `&archiveFormat=${'zip'}`;
 
   const request = { method: 'GET' };
 
@@ -74,6 +74,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           each(widget.selectedItems(), item => {
             if (item.type == 'directory') {
               archiveRequest(item.path);
+              console.log(item.path);
             }
           });
         }
