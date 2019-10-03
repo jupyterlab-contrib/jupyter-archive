@@ -74,7 +74,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Add a JLab option.
 
     // Must be 'zip', 'tgz', 'tbz' or 'txz'.
-    let archiveFormat: string = 'txz';
+    let archiveFormat: string = 'zip';
 
     // Does not work.
     // void settingRegistry
