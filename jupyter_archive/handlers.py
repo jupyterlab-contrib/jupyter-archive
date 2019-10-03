@@ -2,7 +2,7 @@ import os
 import zipfile
 import tarfile
 
-from tornado import gen, web
+from tornado import gen, web, iostream
 from notebook.base.handlers import IPythonHandler
 
 
@@ -18,8 +18,8 @@ class ArchiveStream():
     def tell(self):
         return self.position
 
-    def flush(self):
-        self.handler.flush()
+    async def flush(self):
+        await self.handler.flush()
 
 
 def make_writer(handler, archive_format="zip"):
@@ -51,7 +51,6 @@ class ArchiveHandler(IPythonHandler):
         archive_path = self.get_argument('archivePath')
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
-        archive_format = 'zip'
 
         archive_path = os.path.abspath(archive_path)
         archive_name = os.path.basename(archive_path)
@@ -65,15 +64,20 @@ class ArchiveHandler(IPythonHandler):
             'attachment; filename={}'.format(archive_filename)
         )
 
-        self.log.info('Archiving {}.'.format(archive_filename))
+        try:
+            self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
+            archive_writer = make_writer(self, archive_format)
 
-        archive_writer = make_writer(self, archive_format)
-        with archive_writer as writer:
-            for root, dirs, files in os.walk(archive_path):
-                for filename in files:
-                    file_path = os.path.join(root, filename)
-                    writer.add(file_path, os.path.join(root[len(archive_path):], filename))
-                    await self.flush()
+            with archive_writer as writer:
+                for root, dirs, files in os.walk(archive_path):
+                    for filename in files:
+                        file_path = os.path.join(root, filename)
+                        writer.add(file_path, os.path.join(root[len(archive_path):], filename))
+                        await self.flush()
 
-        self.set_cookie("archiveToken", archive_token)
-        self.log.info('Finished archiving {}.'.format(archive_filename))
+        except iostream.StreamClosedError:
+            self.log.info('Downloading {} has been canceled by the client.'.format(archive_filename))
+
+        else:
+            self.set_cookie("archiveToken", archive_token)
+            self.log.info('Finished downloading {}.'.format(archive_filename))
