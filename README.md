@@ -71,6 +71,7 @@ pytest jupyter_archive/tests/
 - Edit `setup.py` and set the version.
 - Edit `package.json` and set the version.
 - Commit `git commit -am "Bump to <your_version>"`
+- Tag: `git tag <your_version>`
 - Upload to NPM: `yarn publish --access=public`
 - Build Python package: `python setup.py sdist bdist_wheel`
 - Upload Python package: `twine upload dist/*`
