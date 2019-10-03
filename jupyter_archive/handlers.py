@@ -1,6 +1,7 @@
 import os
 import zipfile
 import tarfile
+import pathlib
 
 from tornado import gen, web, iostream
 from notebook.base.handlers import IPythonHandler
@@ -52,9 +53,9 @@ class ArchiveHandler(IPythonHandler):
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
 
-        archive_path = os.path.abspath(archive_path)
-        archive_name = os.path.basename(archive_path)
-        archive_filename = "{}.{}".format(archive_name, archive_format)
+        archive_path = pathlib.Path(archive_path)
+        archive_name = archive_path.name
+        archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
 
         # We gonna send out event streams!
         self.set_header('content-type', 'application/octet-stream')
@@ -69,11 +70,9 @@ class ArchiveHandler(IPythonHandler):
             archive_writer = make_writer(self, archive_format)
 
             with archive_writer as writer:
-                for root, dirs, files in os.walk(archive_path):
-                    for filename in files:
-                        file_path = os.path.join(root, filename)
-                        writer.add(file_path, os.path.join(root[len(archive_path):], filename))
-                        await self.flush()
+                for file_path in archive_path.rglob("*"):
+                    writer.add(file_path, file_path.relative_to(archive_path))
+                    await self.flush()
 
         except iostream.StreamClosedError:
             self.log.info('Downloading {} has been canceled by the client.'.format(archive_filename))
@@ -81,3 +80,5 @@ class ArchiveHandler(IPythonHandler):
         else:
             self.set_cookie("archiveToken", archive_token)
             self.log.info('Finished downloading {}.'.format(archive_filename))
+
+        self.finish()
