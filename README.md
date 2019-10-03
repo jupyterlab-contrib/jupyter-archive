@@ -65,3 +65,16 @@ Test the server extension:
 ```bash
 pytest jupyter_archive/tests/
 ```
+
+## Release a new version
+
+- Edit `setup.py` and set the version.
+- Edit `package.json` and set the version.
+- Commit `git commit -am "Bump to <your_version>"`
+- Upload to NPM: `yarn publish --access=public`
+- Build Python package: `python setup.py sdist bdist_wheel`
+- Upload Python package: `twine upload dist/*`
+
+- Edit `setup.py` and set the version back to `-dev`.
+- Edit `package.json` and set the version back to `-dev`.
+- Commit `git commit -am "Bump to dev"`
