@@ -6,7 +6,7 @@ from tornado import gen, web
 from notebook.base.handlers import IPythonHandler
 
 
-class ZipStream():
+class ArchiveStream():
     def __init__(self, handler):
         self.handler = handler
         self.position = 0
@@ -23,7 +23,7 @@ class ZipStream():
 
 
 def make_writer(handler, archive_format="zip"):
-    fileobj = ZipStream(handler)
+    fileobj = ArchiveStream(handler)
 
     if archive_format == "zip":
         archive_file = zipfile.ZipFile(fileobj, mode='w')
