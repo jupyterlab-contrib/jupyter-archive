@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(name='jupyter-archive',
-      version='0.3.0',
+      version='0.3.1-dev',
       author='Hadrien Mary',
       author_email='hadrien.mary@gmail.com',
       url='https://github.com/hadim/jupyter-archive/',
