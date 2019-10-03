@@ -1,8 +1,8 @@
 # jupyter-archive
 
 [![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
-[![PyPI version][pypi]][pypi-url]
-[![npm_version][npm]][npm-url]
+[![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
+![PyPI](https://img.shields.io/pypi/v/jupyter-archive)
 
 Download folder as archive file.
 
