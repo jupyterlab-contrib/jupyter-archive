@@ -1,6 +1,8 @@
 # jupyter-archive
 
 [![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
+[![PyPI version][pypi]][pypi-url]
+[![npm_version][npm]][npm-url]
 
 Download folder as archive file.
 
@@ -17,7 +19,16 @@ Note that the extension is largely inspired from [nbzip](https://github.com/data
 
 ## Installation
 
-This extension is meant to be integrated into Jupyter so there is no JLab or PyPi releases. Check the dev section for installation.
+This extension is meant to be integrated into Jupyter. In the meantime you can install it with:
+
+```bash
+jupyter labextension install @hadim/jupyter-archive
+pip install jupyter-archive
+```
+
+This will install both the server extension and the labextension needed by this plugin.
+
+You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab_hdf` server extension via `pip`.
 
 ## Development
 

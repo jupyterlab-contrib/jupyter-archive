@@ -1,6 +1,6 @@
 {
-  "name": "jupyter-archive",
-  "version": "0.1.0",
+  "name": "@hadim/jupyter-archive",
+  "version": "0.2.0-dev",
   "description": "Download folder as archive file.",
   "keywords": [
     "jupyter",
