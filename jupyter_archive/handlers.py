@@ -41,13 +41,9 @@ def make_writer(handler, archive_format="zip"):
 
 
 class ArchiveHandler(IPythonHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     @web.authenticated
     async def get(self):
-
-        # TODO: Switch everything to pathlib.
 
         archive_path = self.get_argument('archivePath')
         archive_token = self.get_argument('archiveToken')
@@ -60,10 +56,9 @@ class ArchiveHandler(IPythonHandler):
         # We gonna send out event streams!
         self.set_header('content-type', 'application/octet-stream')
         self.set_header('cache-control', 'no-cache')
-        self.set_header(
-            'content-disposition',
-            'attachment; filename={}'.format(archive_filename)
-        )
+        self.set_header('content-disposition',
+                        'attachment; filename={}'.format(archive_filename)
+                        )
 
         try:
             self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
