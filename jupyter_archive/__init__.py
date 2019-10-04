@@ -8,7 +8,7 @@ def _jupyter_server_extension_paths():
 
 
 def load_jupyter_server_extension(nbapp):
-  base_url = url_path_join(nbapp.web_app.settings['base_url'], '/archive-download')
+  base_url = url_path_join(nbapp.web_app.settings['base_url'], '/directories')
   handlers = [(base_url, ArchiveHandler)]
   nbapp.web_app.add_handlers('.*', handlers)
-  nbapp.log.info("jupyter_archive is enabled.")
+  nbapp.log.info("jupyter-archive is enabled.  66")

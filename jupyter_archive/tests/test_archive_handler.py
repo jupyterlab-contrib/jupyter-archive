@@ -54,7 +54,7 @@ class ArchiveHandlerTest(NotebookTestBase):
 
     # Try to download the created folder.
     archive_relative_path = os.path.basename(archive_dir_path)
-    url_template = 'archive-download?archivePath={}&archiveToken=564646&archiveFormat={}'
+    url_template = 'directories/{}?archiveToken=564646&archiveFormat={}'
 
     url = url_template.format(archive_relative_path, 'zip')
     r = self.request('GET', url)

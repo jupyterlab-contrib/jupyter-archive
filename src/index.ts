@@ -8,25 +8,42 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ServerConnection } from '@jupyterlab/services';
 import { URLExt, ISettingRegistry } from '@jupyterlab/coreutils';
 
+const DIRECTORIES_URL = 'directories';
+
 namespace CommandIDs {
   export const download_archive = 'filebrowser:download-archive';
 }
 
 function archiveRequest(path: string, archiveFormat: string): Promise<void> {
-  // Generate a random token.
-  const rand = () =>
-    Math.random()
-      .toString(36)
-      .substr(2);
-  const token = (length: number) =>
-    (rand() + rand() + rand() + rand()).substr(0, length);
 
   const settings = ServerConnection.makeSettings();
 
-  let url = URLExt.join(settings.baseUrl, '/archive-download');
-  url += `?archivePath=${path}`;
-  url += `&archiveToken=${token(20)}`;
-  url += `&archiveFormat=${archiveFormat}`;
+  let baseUrl = settings.baseUrl;
+    let url = URLExt.join(
+      baseUrl,
+      DIRECTORIES_URL,
+      URLExt.encodeParts(path)
+    );
+
+    const fullurl = new URL(url);
+
+    // Generate a random token.
+    const rand = () =>
+      Math.random()
+        .toString(36)
+        .substr(2);
+    const token = (length: number) =>
+      (rand() + rand() + rand() + rand()).substr(0, length);
+
+    fullurl.searchParams.append('archiveToken', token(20));
+    fullurl.searchParams.append('archiveFormat', archiveFormat);
+
+    const xsrfTokenMatch = document.cookie.match('\\b_xsrf=([^;]*)\\b');
+    if (xsrfTokenMatch) {
+      fullurl.searchParams.append('_xsrf', xsrfTokenMatch[1]);
+    }
+
+    url = fullurl.toString();
 
   const request = { method: 'GET' };
 

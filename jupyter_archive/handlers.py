@@ -44,19 +44,35 @@ def make_writer(handler, archive_format="zip"):
 
 class ArchiveHandler(IPythonHandler):
 
+  # @web.authenticated
+  # def head(self, path):
+  #   self.check_xsrf_cookie()
+  #   return self.get(path, include_body=False)
+
   @web.authenticated
   async def get(self):
+    self.log.info('dsddddddddd')
+    # /directories/ requests must originate from the same site
+    # self.check_xsrf_cookie()
+    # cm = self.contents_manager
 
-    archive_path = self.get_argument('archivePath')
-    archive_token = self.get_argument('archiveToken')
-    archive_format = self.get_argument('archiveFormat', 'zip')
+    # if cm.is_hidden(path) and not cm.allow_hidden:
+    #     self.log.info("Refusing to serve hidden file, via 404 Error")
+    #     raise web.HTTPError(404)
 
-    task = asyncio.create_task(self.archive_and_download(archive_path, archive_format, archive_token))
+    # archive_token = self.get_argument('archiveToken')
+    # archive_format = self.get_argument('archiveFormat', 'zip')
 
-    try:
-      await task
-    except asyncio.CancelledError:
-      task.cancel()
+    # self.log.info(archive_format)
+    # self.log.info(archive_token)
+    # self.log.info(path)
+
+    # task = asyncio.create_task(self.archive_and_download(archive_path, archive_format, archive_token))
+
+    # try:
+    #   await task
+    # except asyncio.CancelledError:
+    #   task.cancel()
 
   async def archive_and_download(self, archive_path, archive_format, archive_token):
 
