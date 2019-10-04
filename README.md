@@ -79,3 +79,4 @@ pytest jupyter_archive/tests/
 - Edit `setup.py` and set the version back to `-dev`.
 - Edit `package.json` and set the version back to `-dev`.
 - Commit `git commit -am "Bump to dev"`
+- Push: `git push origin master --tags`
