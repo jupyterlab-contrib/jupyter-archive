@@ -45,13 +45,25 @@ def make_writer(handler, archive_format="zip"):
 class ArchiveHandler(IPythonHandler):
 
   @web.authenticated
-  async def get(self):
+  def head(self, path):
+    self.check_xsrf_cookie()
+    return self.get(path, include_body=False)
 
-    archive_path = self.get_argument('archivePath')
+  @web.authenticated
+  async def get(self, archive_path, include_body=False):
+
+    # /directories/ requests must originate from the same site
+    self.check_xsrf_cookie()
+    cm = self.contents_manager
+
+    if cm.is_hidden(archive_path) and not cm.allow_hidden:
+        self.log.info("Refusing to serve hidden file, via 404 Error")
+        raise web.HTTPError(404)
+
     archive_token = self.get_argument('archiveToken')
     archive_format = self.get_argument('archiveFormat', 'zip')
 
-    task = asyncio.create_task(self.archive_and_download(archive_path, archive_format, archive_token))
+    task = asyncio.ensure_future(self.archive_and_download(archive_path, archive_format, archive_token))
 
     try:
       await task

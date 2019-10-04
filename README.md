@@ -28,7 +28,7 @@ pip install jupyter-archive
 
 This will install both the server extension and the labextension needed by this plugin.
 
-You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab_hdf` server extension via `pip`.
+You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab-archive` server extension via `pip`.
 
 ## Development
 
