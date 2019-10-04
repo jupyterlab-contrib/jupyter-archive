@@ -1,4 +1,5 @@
 import os
+import asyncio
 import zipfile
 import tarfile
 import pathlib
@@ -15,12 +16,13 @@ class ArchiveStream():
   def write(self, data):
     self.position += len(data)
     self.handler.write(data)
+    del data
 
   def tell(self):
     return self.position
 
-  async def flush(self):
-    await self.handler.flush()
+  def flush(self):
+    self.handler.flush()
 
 
 def make_writer(handler, archive_format="zip"):
@@ -49,6 +51,15 @@ class ArchiveHandler(IPythonHandler):
     archive_token = self.get_argument('archiveToken')
     archive_format = self.get_argument('archiveFormat', 'zip')
 
+    task = asyncio.create_task(self.archive_and_download(archive_path, archive_format, archive_token))
+
+    try:
+      await task
+    except asyncio.CancelledError:
+      task.cancel()
+
+  async def archive_and_download(self, archive_path, archive_format, archive_token):
+
     archive_path = pathlib.Path(archive_path)
     archive_name = archive_path.name
     archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
@@ -57,8 +68,7 @@ class ArchiveHandler(IPythonHandler):
     self.set_header('content-type', 'application/octet-stream')
     self.set_header('cache-control', 'no-cache')
     self.set_header('content-disposition',
-                    'attachment; filename={}'.format(archive_filename)
-                    )
+                    'attachment; filename={}'.format(archive_filename))
 
     try:
       self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
@@ -66,14 +76,15 @@ class ArchiveHandler(IPythonHandler):
 
       with archive_writer as writer:
         for file_path in archive_path.rglob("*"):
-          writer.add(file_path, file_path.relative_to(archive_path))
-          await self.flush()
+          if file_path.is_file():
+            writer.add(file_path, file_path.relative_to(archive_path))
+            await self.flush()
 
     except iostream.StreamClosedError:
       self.log.info('Downloading {} has been canceled by the client.'.format(archive_filename))
+      del writer
+      raise asyncio.CancelledError
 
     else:
       self.set_cookie("archiveToken", archive_token)
       self.log.info('Finished downloading {}.'.format(archive_filename))
-
-    self.finish()
