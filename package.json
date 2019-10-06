@@ -38,7 +38,8 @@
   },
   "dependencies": {
     "@jupyterlab/application": "^1.0.0",
-    "@jupyterlab/filebrowser": "^1.0.0"
+    "@jupyterlab/filebrowser": "^1.0.0",
+    "@jupyterlab/services": "^4.0.0"
   },
   "devDependencies": {
     "mkdirp": "^0.5.1",

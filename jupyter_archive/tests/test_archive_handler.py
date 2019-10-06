@@ -36,19 +36,19 @@ class ArchiveHandlerTest(NotebookTestBase):
     assert r.headers['content-type'] == 'application/octet-stream'
     assert r.headers['cache-control'] == 'no-cache'
 
-    url = url_template.format(archive_relative_path, 'tgz')
+    url = url_template.format(archive_relative_path, 'tar.gz')
     r = self.request('GET', url)
     assert r.status_code == 200
     assert r.headers['content-type'] == 'application/octet-stream'
     assert r.headers['cache-control'] == 'no-cache'
 
-    url = url_template.format(archive_relative_path, 'tbz')
+    url = url_template.format(archive_relative_path, 'tar.bz2')
     r = self.request('GET', url)
     assert r.status_code == 200
     assert r.headers['content-type'] == 'application/octet-stream'
     assert r.headers['cache-control'] == 'no-cache'
 
-    url = url_template.format(archive_relative_path, 'txz')
+    url = url_template.format(archive_relative_path, 'tar.xz')
     r = self.request('GET', url)
     assert r.status_code == 200
     assert r.headers['content-type'] == 'application/octet-stream'
