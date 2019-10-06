@@ -22,8 +22,8 @@ Note that the extension is largely inspired from [nbzip](https://github.com/data
 This extension is meant to be integrated into Jupyter. In the meantime you can install it with:
 
 ```bash
-jupyter labextension install @hadim/jupyter-archive
 pip install jupyter-archive
+jupyter lab build
 ```
 
 This will install both the server extension and the labextension needed by this plugin.
@@ -68,7 +68,7 @@ pytest jupyter_archive/tests/
 
 ## Release a new version
 
-- Edit `setup.py` and set the version.
+- Edit `jupyter_archive/_version.py` and set the version.
 - Edit `package.json` and set the version.
 - Commit `git commit -am "Bump to <your_version>"`
 - Tag: `git tag <your_version>`
@@ -76,7 +76,7 @@ pytest jupyter_archive/tests/
 - Build Python package: `rm -fr dist/ && python setup.py sdist bdist_wheel`
 - Upload Python package: `twine upload dist/*`
 
-- Edit `setup.py` and set the version back to `-dev`.
+- Edit `jupyter_archive/_version.py` and set the version back to `.dev0`.
 - Edit `package.json` and set the version back to `-dev`.
 - Commit `git commit -am "Bump to dev"`
 - Push: `git push origin master --tags`
