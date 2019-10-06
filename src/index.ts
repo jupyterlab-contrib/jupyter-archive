@@ -9,12 +9,14 @@ import { ServerConnection } from '@jupyterlab/services';
 import { URLExt, ISettingRegistry } from '@jupyterlab/coreutils';
 
 const DIRECTORIES_URL = 'directories';
+const EXTRACT_ARCHVE_URL = 'extract-archive';
 
 namespace CommandIDs {
   export const download_archive = 'filebrowser:download-archive';
+  export const extract_archive = 'filebrowser:extract-archive';
 }
 
-function archiveRequest(path: string, archiveFormat: string): Promise<void> {
+function downloadArchiveRequest(path: string, archiveFormat: string): Promise<void> {
 
   const settings = ServerConnection.makeSettings();
 
@@ -69,6 +71,35 @@ function archiveRequest(path: string, archiveFormat: string): Promise<void> {
   });
 }
 
+function extractArchiveRequest(path: string): Promise<void> {
+
+  const settings = ServerConnection.makeSettings();
+
+  let baseUrl = settings.baseUrl;
+  let url = URLExt.join(
+    baseUrl,
+    EXTRACT_ARCHVE_URL,
+    URLExt.encodeParts(path)
+  );
+
+  const fullurl = new URL(url);
+
+  const xsrfTokenMatch = document.cookie.match('\\b_xsrf=([^;]*)\\b');
+  if (xsrfTokenMatch) {
+    fullurl.searchParams.append('_xsrf', xsrfTokenMatch[1]);
+  }
+
+  url = fullurl.toString();
+  const request = { method: 'GET' };
+
+  return ServerConnection.makeRequest(url, request, settings).then(response => {
+    if (response.status !== 200) {
+      throw new ServerConnection.ResponseError(response);
+    }
+  });
+}
+
+
 /**
  * Initialization data for the jupyter-archive extension.
  */
@@ -103,6 +134,9 @@ const extension: JupyterFrontEndPlugin<void> = {
     //     archiveFormat = settings.get('archiveFormat').composite as string;
     //   });
 
+    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
+    const selectorOnlyFile = '.jp-DirListing-item[data-isdir="false"]';
+
     // Add the command to the file's menu.
     commands.addCommand(CommandIDs.download_archive, {
       execute: () => {
@@ -110,7 +144,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (widget) {
           each(widget.selectedItems(), item => {
             if (item.type == 'directory') {
-              archiveRequest(item.path, archiveFormat);
+              downloadArchiveRequest(item.path, archiveFormat);
             }
           });
         }
@@ -119,10 +153,31 @@ const extension: JupyterFrontEndPlugin<void> = {
       label: 'Download as an archive',
     });
 
-    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
     app.contextMenu.addItem({
       command: CommandIDs.download_archive,
       selector: selectorOnlyDir,
+      rank: 10,
+    });
+
+    // Add the command to the file's menu.
+    commands.addCommand(CommandIDs.extract_archive, {
+      execute: () => {
+        const widget = tracker.currentWidget;
+        if (widget) {
+          each(widget.selectedItems(), item => {
+            extractArchiveRequest(item.path);
+          });
+        }
+      },
+      iconClass: 'jp-MaterialIcon jp-DownCaretIcon',
+      label: 'Extract archive',
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.extract_archive,
+      // I don't know how to select files
+      // with only a certain extension (.zip, .tgz, etc).
+      selector: selectorOnlyFile,
       rank: 10,
     });
   },
