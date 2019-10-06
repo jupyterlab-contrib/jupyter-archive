@@ -34,7 +34,7 @@ def make_writer(handler, archive_format="zip"):
     archive_file.add = archive_file.write
   elif archive_format in ["tgz", "tar.gz"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|gz')
-  elif archive_format ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
+  elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|bz2')
   elif archive_format in ["txz", "tar.xz"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|xz')
@@ -51,7 +51,7 @@ def make_reader(archive_path):
     archive_file = zipfile.ZipFile(archive_path, mode='r')
   elif archive_format in ["tgz", "tar.gz"]:
     archive_file = tarfile.open(archive_path, mode='r|gz')
-  elif archive_format ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
+  elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
     archive_file = tarfile.open(archive_path, mode='r|bz2')
   elif archive_format in ["txz", "tar.xz"]:
     archive_file = tarfile.open(archive_path, mode='r|xz')
