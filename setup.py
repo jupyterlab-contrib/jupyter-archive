@@ -22,6 +22,6 @@ setup(name='jupyter-archive',
             'notebook'
       ],
       extras_require={
-            "test": ["jupyterlab", "pytest", "requests"]
+            "test": ["jupyterlab", "pytest"]
       }
 )

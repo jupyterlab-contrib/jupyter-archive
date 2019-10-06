@@ -1,19 +1,8 @@
-from ipython_genutils import py3compat
-from notebook.tests.launchnotebook import NotebookTestBase
-from notebook.utils import url_path_join
-from nbformat.v4 import (new_notebook,
-                         new_markdown_cell, new_code_cell,
-                         new_output)
-from nbformat import write
-import requests
 import io
 import os
-import logging
-import tempfile
-import json
-import unittest
-from unicodedata import normalize
 
+from nbformat import write
+from notebook.tests.launchnotebook import NotebookTestBase
 from traitlets.config import Config
 
 pjoin = os.path.join
