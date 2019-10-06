@@ -45,11 +45,6 @@ def make_writer(handler, archive_format="zip"):
 class ArchiveHandler(IPythonHandler):
 
   @web.authenticated
-  def head(self, path):
-    self.check_xsrf_cookie()
-    return self.get(path, include_body=False)
-
-  @web.authenticated
   async def get(self, archive_path, include_body=False):
 
     # /directories/ requests must originate from the same site
