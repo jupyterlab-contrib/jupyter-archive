@@ -10,10 +10,11 @@ install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
+  - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda config --add channels conda-forge
   - conda update -y -q conda
   - conda info -a
-  - conda create -n conda_env python=$PYTHON_VERSION
+  - conda create -y -n conda_env python=$PYTHON_VERSION
   - conda activate conda_env
   - conda env update -f "environment.yml"
 
@@ -24,4 +25,4 @@ script:
   - jupyter labextension link .
   - pip install -e .
   - jupyter serverextension enable --py jupyter_archive
-  - pytest jupyter_archive/
+  - pytest -v jupyter_archive/
