@@ -17,4 +17,11 @@ setup(name='jupyter-archive',
               'Operating System :: OS Independent',
               'Programming Language :: Python',
               'Programming Language :: Python :: 3',
-              ])
+              ],
+      install_requires=[
+            'notebook'
+      ],
+      extras_require={
+            "test": ["jupyterlab", "pytest", "requests"]
+      }
+)
