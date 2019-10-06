@@ -44,7 +44,7 @@
     "mkdirp": "^0.5.1",
     "rimraf": "^2.6.1",
     "typescript": "~3.5.2",
-    "yarn": "~1.15"
+    "yarn": "~1.17"
   },
   "sideEffects": [
     "style/*.css"
