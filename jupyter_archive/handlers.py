@@ -63,7 +63,8 @@ def make_reader(archive_path):
 class DownloadArchiveHandler(IPythonHandler):
 
   @web.authenticated
-  async def get(self, archive_path, include_body=False):
+  @gen.coroutine
+  def get(self, archive_path, include_body=False):
 
     # /directories/ requests must originate from the same site
     self.check_xsrf_cookie()
@@ -79,11 +80,12 @@ class DownloadArchiveHandler(IPythonHandler):
     task = asyncio.ensure_future(self.archive_and_download(archive_path, archive_format, archive_token))
 
     try:
-      await task
+      yield from task
     except asyncio.CancelledError:
       task.cancel()
 
-  async def archive_and_download(self, archive_path, archive_format, archive_token):
+  @gen.coroutine
+  def archive_and_download(self, archive_path, archive_format, archive_token):
 
     archive_path = pathlib.Path(archive_path)
     archive_name = archive_path.name
@@ -103,7 +105,7 @@ class DownloadArchiveHandler(IPythonHandler):
         for file_path in archive_path.rglob("*"):
           if file_path.is_file():
             writer.add(file_path, file_path.relative_to(archive_path))
-            await self.flush()
+            yield from self.flush()
 
     except iostream.StreamClosedError:
       self.log.info('Downloading {} has been canceled by the client.'.format(archive_filename))
@@ -118,7 +120,7 @@ class DownloadArchiveHandler(IPythonHandler):
 class ExtractArchiveHandler(IPythonHandler):
 
   @web.authenticated
-  async def get(self, archive_path, include_body=False):
+  def get(self, archive_path, include_body=False):
 
     # /extract-archive/ requests must originate from the same site
     self.check_xsrf_cookie()
