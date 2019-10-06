@@ -66,6 +66,10 @@ Test the server extension:
 pytest jupyter_archive/tests/
 ```
 
+## License
+
+Under BSD license. See [LICENSE](LICENSE).
+
 ## Release a new version
 
 - Edit `jupyter_archive/_version.py` and set the version.
