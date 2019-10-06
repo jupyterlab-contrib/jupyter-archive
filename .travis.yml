@@ -1,19 +1,28 @@
 language: c
 
+env:
+  - PYTHON_VERSION="3.5"
+  - PYTHON_VERSION="3.6"
+  - PYTHON_VERSION="3.7"
+
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
+  - source $HOME/miniconda/etc/profile.d/conda.sh
   - conda config --add channels conda-forge
   - conda update -y -q conda
   - conda info -a
-  - conda env update -n base -f environment.yml
+  - conda create -y -n conda_env python=$PYTHON_VERSION
+  - conda activate conda_env
+  - conda env update -f "environment.yml"
 
 script:
+  - conda activate conda_env
   - jlpm
   - jlpm build
   - jupyter labextension link .
   - pip install -e .
   - jupyter serverextension enable --py jupyter_archive
-  - pytest jupyter_archive/
+  - pytest -v jupyter_archive/

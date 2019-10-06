@@ -3,6 +3,7 @@ import asyncio
 import zipfile
 import tarfile
 import pathlib
+import threading
 
 from tornado import gen, web, iostream
 from notebook.base.handlers import IPythonHandler
@@ -31,21 +32,39 @@ def make_writer(handler, archive_format="zip"):
   if archive_format == "zip":
     archive_file = zipfile.ZipFile(fileobj, mode='w')
     archive_file.add = archive_file.write
-  elif archive_format == "tgz":
+  elif archive_format in ["tgz", "tar.gz"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|gz')
-  elif archive_format == "tbz":
+  elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|bz2')
-  elif archive_format == "txz":
+  elif archive_format in ["txz", "tar.xz"]:
     archive_file = tarfile.open(fileobj=fileobj, mode='w|xz')
   else:
     raise ValueError("'{}' is not a valid archive format.".format(archive_format))
   return archive_file
 
 
-class ArchiveHandler(IPythonHandler):
+def make_reader(archive_path):
+
+  archive_format = archive_path.suffix[1:]
+
+  if archive_format == "zip":
+    archive_file = zipfile.ZipFile(archive_path, mode='r')
+  elif archive_format in ["tgz", "tar.gz"]:
+    archive_file = tarfile.open(archive_path, mode='r|gz')
+  elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
+    archive_file = tarfile.open(archive_path, mode='r|bz2')
+  elif archive_format in ["txz", "tar.xz"]:
+    archive_file = tarfile.open(archive_path, mode='r|xz')
+  else:
+    raise ValueError("'{}' is not a valid archive format.".format(archive_format))
+  return archive_file
+
+
+class DownloadArchiveHandler(IPythonHandler):
 
   @web.authenticated
-  async def get(self, archive_path, include_body=False):
+  @gen.coroutine
+  def get(self, archive_path, include_body=False):
 
     # /directories/ requests must originate from the same site
     self.check_xsrf_cookie()
@@ -61,11 +80,12 @@ class ArchiveHandler(IPythonHandler):
     task = asyncio.ensure_future(self.archive_and_download(archive_path, archive_format, archive_token))
 
     try:
-      await task
+      yield from task
     except asyncio.CancelledError:
       task.cancel()
 
-  async def archive_and_download(self, archive_path, archive_format, archive_token):
+  @gen.coroutine
+  def archive_and_download(self, archive_path, archive_format, archive_token):
 
     archive_path = pathlib.Path(archive_path)
     archive_name = archive_path.name
@@ -85,7 +105,7 @@ class ArchiveHandler(IPythonHandler):
         for file_path in archive_path.rglob("*"):
           if file_path.is_file():
             writer.add(file_path, file_path.relative_to(archive_path))
-            await self.flush()
+            yield from self.flush()
 
     except iostream.StreamClosedError:
       self.log.info('Downloading {} has been canceled by the client.'.format(archive_filename))
@@ -95,3 +115,36 @@ class ArchiveHandler(IPythonHandler):
     else:
       self.set_cookie("archiveToken", archive_token)
       self.log.info('Finished downloading {}.'.format(archive_filename))
+
+
+class ExtractArchiveHandler(IPythonHandler):
+
+  @web.authenticated
+  def get(self, archive_path, include_body=False):
+
+    # /extract-archive/ requests must originate from the same site
+    self.check_xsrf_cookie()
+    cm = self.contents_manager
+
+    if cm.is_hidden(archive_path) and not cm.allow_hidden:
+        self.log.info("Refusing to serve hidden file, via 404 Error")
+        raise web.HTTPError(404)
+
+    archive_path = pathlib.Path(archive_path).absolute()
+    archive_name = archive_path.name
+
+    # Run it in a thread so it's not blocking.
+    # TODO: Convert to async ideally.
+    run_task = lambda : self.extract_archive(archive_path)
+    threading.Thread(target=run_task).start()
+
+  def extract_archive(self, archive_path):
+
+      archive_destination = archive_path.parent
+      self.log.info('Begin extraction of {} to {}.'.format(archive_path, archive_destination))
+
+      archive_reader = make_reader(archive_path)
+      with archive_reader as archive:
+        archive.extractall(archive_destination)
+
+      self.log.info('Finished extracting {} to {}.'.format(archive_path, archive_destination))

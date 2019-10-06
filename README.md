@@ -4,14 +4,14 @@
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
 
-Download folder as archive file.
+Make, download and extract archive files.
 
 The extension is composed of two extensions:
 
 - A Jupyterlab extension (frontend).
 - A Jupyter server extension (backend).
 
-Note that the extension is largely inspired from [nbzip](https://github.com/data-8/nbzip).
+Note that the extension is inspired from [nbzip](https://github.com/data-8/nbzip).
 
 ## Prerequisites
 
