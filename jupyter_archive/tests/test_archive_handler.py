@@ -34,11 +34,11 @@ class ArchiveHandlerTest(NotebookTestBase):
         archive_relative_path = os.path.basename(archive_dir_path)
         url_template = "directories/{}?archiveToken=564646&archiveFormat={}"
 
-        file_lists = [
+        file_lists = {
             "download-archive-dir/test2.txt",
             "download-archive-dir/test1.txt",
             "download-archive-dir/test3.md",
-        ]
+        }
 
         format_mode = {
             "zip": "r",
@@ -60,10 +60,10 @@ class ArchiveHandlerTest(NotebookTestBase):
             assert r.headers["cache-control"] == "no-cache"
             if format == "zip":
                 with zipfile.ZipFile(io.BytesIO(r.content), mode=mode) as zf:
-                    assert zf.namelist() == file_lists
+                    assert set(zf.namelist()) == file_lists
             else:
                 with tarfile.open(fileobj=io.BytesIO(r.content), mode=mode) as tf:
-                    assert list(map(lambda m: m.name, tf.getmembers())) == file_lists
+                    assert set(map(lambda m: m.name, tf.getmembers())) == file_lists
 
     def test_extract(self):
 
