@@ -47,28 +47,22 @@ function downloadArchiveRequest(path: string, archiveFormat: string): Promise<vo
 
     url = fullurl.toString();
 
-  const request = { method: 'GET' };
-
-  return ServerConnection.makeRequest(url, request, settings).then(response => {
-    if (response.status !== 200) {
-      throw new ServerConnection.ResponseError(response);
-    }
-
     // Check the browser is Chrome https://stackoverflow.com/a/9851769
     const chrome = (window as any).chrome;
     const isChrome = !!chrome && (!!chrome.webstore || !!chrome.runtime);
     if (isChrome) {
       // Workaround https://bugs.chromium.org/p/chromium/issues/detail?id=455987
-      window.open(response.url);
+      window.open(url);
     } else {
       let element = document.createElement('a');
       document.body.appendChild(element);
-      element.setAttribute('href', response.url);
+      element.setAttribute('href', url);
       element.setAttribute('download', '');
       element.click();
       document.body.removeChild(element);
     }
-  });
+
+    return void 0;
 }
 
 function extractArchiveRequest(path: string): Promise<void> {
