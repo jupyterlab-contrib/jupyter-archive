@@ -1,7 +1,9 @@
 import io
 import os
+from os.path import join as pjoin
 import pathlib
 import shutil
+import tarfile
 import zipfile
 import time
 
@@ -9,90 +11,111 @@ from nbformat import write
 from notebook.tests.launchnotebook import NotebookTestBase
 from traitlets.config import Config
 
-pjoin = os.path.join
-
 
 class ArchiveHandlerTest(NotebookTestBase):
 
-  config = Config({'NotebookApp': {"nbserver_extensions": {"jupyter_archive": True}}})
+    config = Config({"NotebookApp": {"nbserver_extensions": {"jupyter_archive": True}}})
 
-  def test_download(self):
+    def test_download(self):
 
-    nbdir = self.notebook_dir
+        nbdir = self.notebook_dir
 
-    # Create a dummy directory.
-    archive_dir_path = pjoin(nbdir, 'download-archive-dir')
-    os.makedirs(archive_dir_path)
-    with open(pjoin(archive_dir_path, 'test1.txt'), 'w') as f:
-        f.write('hello1')
-    with open(pjoin(archive_dir_path, 'test2.txt'), 'w') as f:
-        f.write('hello2')
-    with open(pjoin(archive_dir_path, 'test3.md'), 'w') as f:
-        f.write('hello3')
+        # Create a dummy directory.
+        archive_dir_path = pjoin(nbdir, "download-archive-dir")
+        os.makedirs(archive_dir_path)
+        with open(pjoin(archive_dir_path, "test1.txt"), "w") as f:
+            f.write("hello1")
+        with open(pjoin(archive_dir_path, "test2.txt"), "w") as f:
+            f.write("hello2")
+        with open(pjoin(archive_dir_path, "test3.md"), "w") as f:
+            f.write("hello3")
 
-    # Try to download the created folder.
-    archive_relative_path = os.path.basename(archive_dir_path)
-    url_template = 'directories/{}?archiveToken=564646&archiveFormat={}'
+        # Try to download the created folder.
+        archive_relative_path = os.path.basename(archive_dir_path)
+        url_template = "directories/{}?archiveToken=564646&archiveFormat={}"
 
-    url = url_template.format(archive_relative_path, 'zip')
-    r = self.request('GET', url)
-    assert r.status_code == 200
-    assert r.headers['content-type'] == 'application/octet-stream'
-    assert r.headers['cache-control'] == 'no-cache'
+        file_lists = [
+            "download-archive-dir/test2.txt",
+            "download-archive-dir/test1.txt",
+            "download-archive-dir/test3.md",
+        ]
 
-    url = url_template.format(archive_relative_path, 'tgz')
-    r = self.request('GET', url)
-    assert r.status_code == 200
-    assert r.headers['content-type'] == 'application/octet-stream'
-    assert r.headers['cache-control'] == 'no-cache'
+        format_mode = {
+            "zip": "r",
+            "tgz": "r|gz",
+            "tar.gz": "r|gz",
+            "tbz": "r|bz2",
+            "tbz2": "r|bz2",
+            "tar.bz": "r|bz2",
+            "tar.bz2": "r|bz2",
+            "txz": "r|xz",
+            "tar.xz": "r|xz",
+        }
 
-    url = url_template.format(archive_relative_path, 'tbz')
-    r = self.request('GET', url)
-    assert r.status_code == 200
-    assert r.headers['content-type'] == 'application/octet-stream'
-    assert r.headers['cache-control'] == 'no-cache'
+        for format, mode in format_mode.items():
+            url = url_template.format(archive_relative_path, format)
+            r = self.request("GET", url)
+            assert r.status_code == 200
+            assert r.headers["content-type"] == "application/octet-stream"
+            assert r.headers["cache-control"] == "no-cache"
+            if format == "zip":
+                with zipfile.ZipFile(io.BytesIO(r.content), mode=mode) as zf:
+                    assert zf.namelist() == file_lists
+            else:
+                with tarfile.open(fileobj=io.BytesIO(r.content), mode=mode) as tf:
+                    assert list(map(lambda m: m.name, tf.getmembers())) == file_lists
 
-    url = url_template.format(archive_relative_path, 'txz')
-    r = self.request('GET', url)
-    assert r.status_code == 200
-    assert r.headers['content-type'] == 'application/octet-stream'
-    assert r.headers['cache-control'] == 'no-cache'
+    def test_extract(self):
 
-  def test_extract(self):
+        nbdir = self.notebook_dir
 
-    nbdir = self.notebook_dir
+        # Create a dummy directory.
+        archive_dir_path = pjoin(nbdir, "extract-archive-dir")
+        os.makedirs(archive_dir_path)
+        with open(pjoin(archive_dir_path, "extract-test1.txt"), "w") as f:
+            f.write("hello1")
+        with open(pjoin(archive_dir_path, "extract-test2.txt"), "w") as f:
+            f.write("hello2")
+        with open(pjoin(archive_dir_path, "extract-test3.md"), "w") as f:
+            f.write("hello3")
 
-    # Create a dummy directory.
-    archive_dir_path = pjoin(nbdir, 'extract-archive-dir')
-    archive_dir_path = pjoin(archive_dir_path, 'extract-archive-dir')
-    os.makedirs(archive_dir_path)
-    with open(pjoin(archive_dir_path, 'extract-test1.txt'), 'w') as f:
-        f.write('hello1')
-    with open(pjoin(archive_dir_path, 'extract-test2.txt'), 'w') as f:
-        f.write('hello2')
-    with open(pjoin(archive_dir_path, 'extract-test3.md'), 'w') as f:
-        f.write('hello3')
+        format_mode = {
+            "zip": "w",
+            "tgz": "w|gz",
+            "tar.gz": "w|gz",
+            "tbz": "w|bz2",
+            "tbz2": "w|bz2",
+            "tar.bz": "w|bz2",
+            "tar.bz2": "w|bz2",
+            "txz": "w|xz",
+            "tar.xz": "w|xz",
+        }
 
-    # Make an archive
-    archive_dir_path = pathlib.Path(archive_dir_path).parent
-    archive_path = archive_dir_path.with_suffix(".zip")
-    with zipfile.ZipFile(archive_path, mode='w') as writer:
-        for file_path in archive_dir_path.rglob("*"):
-          if file_path.is_file():
-            writer.write(file_path, file_path.relative_to(archive_dir_path))
+        for format, mode in format_mode.items():
+            # Make an archive
+            archive_dir_path = pathlib.Path(nbdir) / "extract-archive-dir"
+            archive_path = archive_dir_path.with_suffix("." + format)
+            if format == "zip":
+                with zipfile.ZipFile(archive_path, mode=mode) as writer:
+                    for file_path in archive_dir_path.rglob("*"):
+                        if file_path.is_file():
+                            writer.write(file_path, file_path.relative_to(nbdir))
+            else:
+                with tarfile.open(str(archive_path), mode=mode) as writer:
+                    for file_path in archive_dir_path.rglob("*"):
+                        if file_path.is_file():
+                            writer.add(file_path, file_path.relative_to(nbdir))
 
-    # Remove the directory
-    shutil.rmtree(archive_dir_path)
+            # Remove the directory
+            shutil.rmtree(archive_dir_path)
 
-    url_template = 'extract-archive/{}'
+            url_template = "extract-archive/{}"
 
-    url = url_template.format(archive_path)
-    r = self.request('GET', url)
-    assert r.status_code == 200
+            url = url_template.format(os.path.relpath(archive_path, nbdir))
+            r = self.request("GET", url)
+            assert r.status_code == 200
+            assert archive_dir_path.is_dir()
 
-    time.sleep(0.5)
+            n_files = len(list(archive_dir_path.glob("*")))
+            assert n_files == 3
 
-    assert archive_dir_path.is_dir()
-
-    n_files = len(list(archive_dir_path.glob("*")))
-    assert n_files == 3
