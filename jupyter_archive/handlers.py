@@ -76,7 +76,7 @@ class DownloadArchiveHandler(IPythonHandler):
 
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
-        
+
         fullpath = os.path.join(cm.root_dir, url2path(archive_path))
 
         archive_path = pathlib.Path(archive_path)
@@ -91,16 +91,18 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('cache-control', 'no-cache')
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
-    
+
         task = asyncio.ensure_future(self.archive_and_download(fullpath, archive_format))
 
         try:
             yield from task
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, iostream.StreamClosedError):
             task.cancel()
+            self.log.info('Download canceled.')
+        else:
+            self.log.info('Finished downloading {}.'.format(archive_filename))
 
         self.set_cookie("archiveToken", archive_token)
-        self.log.info('Finished downloading {}.'.format(archive_filename))
         self.finish()
 
     @gen.coroutine
@@ -129,7 +131,7 @@ class ExtractArchiveHandler(IPythonHandler):
         if cm.is_hidden(archive_path) and not cm.allow_hidden:
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
-        
+
         fullpath = os.path.join(cm.root_dir, url2path(archive_path))
 
         yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, pathlib.Path(fullpath))
