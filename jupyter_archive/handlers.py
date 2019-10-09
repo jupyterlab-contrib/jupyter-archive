@@ -30,7 +30,7 @@ def make_writer(handler, archive_format="zip"):
     fileobj = ArchiveStream(handler)
 
     if archive_format == "zip":
-        archive_file = zipfile.ZipFile(fileobj, mode='w')
+        archive_file = zipfile.ZipFile(fileobj, mode='w', compression=zipfile.ZIP_DEFLATED)
         archive_file.add = archive_file.write
     elif archive_format in ["tgz", "tar.gz"]:
         archive_file = tarfile.open(fileobj=fileobj, mode='w|gz')
@@ -83,7 +83,6 @@ class DownloadArchiveHandler(IPythonHandler):
         archive_name = archive_path.name
         archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
 
-
         # We gonna send out event streams!
 
         self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
@@ -108,13 +107,13 @@ class DownloadArchiveHandler(IPythonHandler):
     @gen.coroutine
     def archive_and_download(self, fullpath, archive_format):
 
-        with make_writer(self, archive_format) as zipf:
+        with make_writer(self, archive_format) as archive:
             prefix = len(str(pathlib.Path(fullpath).parent)) + len(os.path.sep)
             for root, _, files in os.walk(fullpath):
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     self.log.debug("{}\n".format(file_name))
-                    zipf.add(file_name, os.path.join(root[prefix:], file_))
+                    archive.add(file_name, os.path.join(root[prefix:], file_))
                     yield from self.flush()
 
 
