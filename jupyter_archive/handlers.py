@@ -91,21 +91,18 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
 
-        task = asyncio.ensure_future(self.archive_and_download(fullpath, archive_format))
+        task = asyncio.ensure_future(self.archive_and_download(fullpath, archive_format, archive_token))
 
         try:
-            yield from task
+            yield task
         except (asyncio.CancelledError, iostream.StreamClosedError):
             task.cancel()
             self.log.info('Download canceled.')
         else:
             self.log.info('Finished downloading {}.'.format(archive_filename))
 
-        self.set_cookie("archiveToken", archive_token)
-        self.finish()
-
     @gen.coroutine
-    def archive_and_download(self, fullpath, archive_format):
+    def archive_and_download(self, fullpath, archive_format, archive_token):
 
         with make_writer(self, archive_format) as archive:
             prefix = len(str(pathlib.Path(fullpath).parent)) + len(os.path.sep)
@@ -114,7 +111,10 @@ class DownloadArchiveHandler(IPythonHandler):
                     file_name = os.path.join(root, file_)
                     self.log.debug("{}\n".format(file_name))
                     archive.add(file_name, os.path.join(root[prefix:], file_))
-                    yield from self.flush()
+                    yield self.flush()
+
+        self.set_cookie("archiveToken", archive_token)
+        self.finish()
 
 
 class ExtractArchiveHandler(IPythonHandler):
