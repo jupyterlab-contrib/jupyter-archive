@@ -1,0 +1,11 @@
+channels:
+    - conda-forge
+
+dependencies:
+    - python>=3.6
+    - pytest
+    - jupyterlab
+    - cookiecutter
+    - nodejs
+    - git
+    - yarn
