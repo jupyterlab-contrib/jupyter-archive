@@ -1,0 +1,6 @@
+jlpm
+jlpm build
+jupyter labextension link .
+
+pip install -e .
+jupyter serverextension enable --py jupyter_archive
