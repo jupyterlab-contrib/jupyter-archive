@@ -13,8 +13,9 @@ const DIRECTORIES_URL = "directories";
 const EXTRACT_ARCHVE_URL = "extract-archive";
 
 namespace CommandIDs {
-  export const download_archive = "filebrowser:download-archive";
-  export const extract_archive = "filebrowser:extract-archive";
+  export const downloadArchive = "filebrowser:download-archive";
+  export const extractArchive = "filebrowser:extract-archive";
+  export const downloadArchiveCurrentFolder = "filebrowser:download-archive-current-folder";
 }
 
 function downloadArchiveRequest(
@@ -125,10 +126,14 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
       });
 
+    // matches anywhere on filebrowser
+    const selectorContent = '.jp-DirListing-content';
+
+    // matches all filebrowser items
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
 
-    // Add the command to the file's menu.
-    commands.addCommand(CommandIDs.download_archive, {
+    // Add the 'download_archive' command to the file's menu.
+    commands.addCommand(CommandIDs.downloadArchive, {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
@@ -144,13 +149,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     app.contextMenu.addItem({
-      command: CommandIDs.download_archive,
+      command: CommandIDs.downloadArchive,
       selector: selectorOnlyDir,
       rank: 10
     });
 
-    // Add the command to the file's menu.
-    commands.addCommand(CommandIDs.extract_archive, {
+    // Add the 'extract_archive' command to the file's menu.
+    commands.addCommand(CommandIDs.extractArchive, {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
@@ -171,10 +176,28 @@ const extension: JupyterFrontEndPlugin<void> = {
     allowedArchiveExtensions.forEach(extension => {
       const selector = '.jp-DirListing-item[title$="' + extension + '"]';
       app.contextMenu.addItem({
-        command: CommandIDs.extract_archive,
+        command: CommandIDs.extractArchive,
         selector: selector,
         rank: 10
       });
+    });
+
+    // Add the 'download_archive' command to fiel browser content.
+    commands.addCommand(CommandIDs.downloadArchiveCurrentFolder, {
+      execute: () => {
+        const widget = tracker.currentWidget;
+        if (widget) {
+          downloadArchiveRequest(widget.model.path, archiveFormat);
+        }
+      },
+      iconClass: "jp-MaterialIcon jp-DownloadIcon",
+      label: "Download current folder as an archive"
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.downloadArchiveCurrentFolder,
+      selector: selectorContent,
+      rank: 3
     });
 
   }

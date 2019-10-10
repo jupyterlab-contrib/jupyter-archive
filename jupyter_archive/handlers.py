@@ -77,13 +77,11 @@ class DownloadArchiveHandler(IPythonHandler):
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
 
-        fullpath = os.path.join(cm.root_dir, url2path(archive_path))
+        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
 
         archive_path = pathlib.Path(archive_path)
         archive_name = archive_path.name
         archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
-
-        # We gonna send out event streams!
 
         self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
         self.set_header('content-type', 'application/octet-stream')
@@ -91,7 +89,7 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
 
-        task = asyncio.ensure_future(self.archive_and_download(fullpath, archive_format, archive_token))
+        task = asyncio.ensure_future(self.archive_and_download(archive_path, archive_format, archive_token))
 
         try:
             yield task
@@ -102,11 +100,11 @@ class DownloadArchiveHandler(IPythonHandler):
             self.log.info('Finished downloading {}.'.format(archive_filename))
 
     @gen.coroutine
-    def archive_and_download(self, fullpath, archive_format, archive_token):
+    def archive_and_download(self, archive_path, archive_format, archive_token):
 
         with make_writer(self, archive_format) as archive:
-            prefix = len(str(pathlib.Path(fullpath).parent)) + len(os.path.sep)
-            for root, _, files in os.walk(fullpath):
+            prefix = len(str(archive_path.parent)) + len(os.path.sep)
+            for root, _, files in os.walk(archive_path):
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     self.log.debug("{}\n".format(file_name))
@@ -131,9 +129,10 @@ class ExtractArchiveHandler(IPythonHandler):
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
-        fullpath = os.path.join(cm.root_dir, url2path(archive_path))
+        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
+        archive_path = pathlib.Path(archive_path)
 
-        yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, pathlib.Path(fullpath))
+        yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, archive_path)
 
         self.finish()
 
