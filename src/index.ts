@@ -126,7 +126,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
 
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
-    const selectorOnlyFile = '.jp-DirListing-item[data-isdir="false"]';
 
     // Add the command to the file's menu.
     commands.addCommand(CommandIDs.download_archive, {
@@ -164,13 +163,20 @@ const extension: JupyterFrontEndPlugin<void> = {
       label: "Extract archive"
     });
 
-    app.contextMenu.addItem({
-      command: CommandIDs.extract_archive,
-      // I don't know how to select files
-      // with only a certain extension (.zip, .tgz, etc).
-      selector: selectorOnlyFile,
-      rank: 10
+    // Add a command for each archive extensions
+    // TODO: use only one command and accept multiple extensions.
+    const allowedArchiveExtensions = [".zip", ".tgz", ".tar.gz",".tbz", ".tbz2",
+                                      ".tar.bz", ".tar.bz2", ".txz", ".tar.xz"]
+
+    allowedArchiveExtensions.forEach(extension => {
+      const selector = '.jp-DirListing-item[title$="' + extension + '"]';
+      app.contextMenu.addItem({
+        command: CommandIDs.extract_archive,
+        selector: selector,
+        rank: 10
+      });
     });
+
   }
 };
 
