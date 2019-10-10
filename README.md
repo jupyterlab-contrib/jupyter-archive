@@ -12,6 +12,8 @@ The extension is composed of two extensions:
 - A Jupyterlab extension (frontend).
 - A Jupyter server extension (backend).
 
+![jupyter-archive in action](./archive.gif "jupyter-archive in action.")
+
 Note that the extension is inspired from [nbzip](https://github.com/data-8/nbzip).
 
 ## Prerequisites
