@@ -1,5 +1,6 @@
 # jupyter-archive
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://beta.mybinder.org/v2/gh/hadim/jupyter-archive/master?urlpath=lab)
 [![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
