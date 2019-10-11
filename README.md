@@ -77,7 +77,3 @@ Under BSD license. See [LICENSE](LICENSE).
 
 - Install those packages: `conda install twine rever`
 - Run: `rever <VERSION>`
-
-- Edit `jupyter_archive/_version.py` and set the version back to `.dev0`.
-- Edit `package.json` and set the version back to `-dev`.
-- Commit `git commit -am "Bump to dev"`
