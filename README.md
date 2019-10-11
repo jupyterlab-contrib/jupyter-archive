@@ -75,15 +75,9 @@ Under BSD license. See [LICENSE](LICENSE).
 
 ## Release a new version
 
-- Edit `jupyter_archive/_version.py` and set the version.
-- Edit `package.json` and set the version.
-- Commit `git commit -am "Bump to <your_version>"`
-- Tag: `git tag <your_version>`
-- Upload to NPM: `yarn publish --access=public`
-- Build Python package: `rm -fr dist/ && python setup.py sdist bdist_wheel`
-- Upload Python package: `twine upload dist/*`
+- Install those packages: `conda install twine rever`
+- Run: `rever <VERSION>`
 
 - Edit `jupyter_archive/_version.py` and set the version back to `.dev0`.
 - Edit `package.json` and set the version back to `-dev`.
 - Commit `git commit -am "Bump to dev"`
-- Push: `git push origin master --tags`
