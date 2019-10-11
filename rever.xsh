@@ -5,7 +5,7 @@ command('publish_npm', 'yarn publish --access=public --new-version $VERSION', ''
 
 $PROJECT = 'jupyter-archive'
 
-$ACTIVITIES = ['run_tests', 'version_bump', 'tag', 'push_tag', 'pypi', 'publish_npm', 'ghrelease', 'bump_to_dev']
+$ACTIVITIES = ['run_tests', 'version_bump', 'tag', 'push_tag', 'pypi', 'publish_npm', 'ghrelease', 'bump_to_dev', 'push_tag']
 
 $VERSION_BUMP_PATTERNS = [('jupyter_archive/_version.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
                           ('package.json', '"version"\s*:.*,', '"version": "$VERSION",')]
