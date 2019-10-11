@@ -23,7 +23,10 @@ class ArchiveStream():
         return self.position
 
     def flush(self):
-        self.handler.flush()
+        # Note: Flushing is done elsewhere, in the main thread
+        # because `write()` is called in a background thread.
+        # self.handler.flush()
+        pass
 
 
 def make_writer(handler, archive_format="zip"):
@@ -89,17 +92,26 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
 
-        task = asyncio.ensure_future(self.archive_and_download(archive_path, archive_format, archive_token))
+        self.flush_cb = ioloop.PeriodicCallback(self.flush, 100)
+        self.flush_cb.start()
 
+        args = (archive_path, archive_format, archive_token)
         try:
-            yield task
-        except (asyncio.CancelledError, iostream.StreamClosedError):
-            task.cancel()
+            yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
+
+        ## FIXME: Catching the exception does not work.
+        except Exception:
             self.log.info('Download canceled.')
+
         else:
+            self.flush()
+            self.set_cookie("archiveToken", archive_token)
+
             self.log.info('Finished downloading {}.'.format(archive_filename))
 
-    @gen.coroutine
+        self.flush_cb.stop()
+        self.finish()
+
     def archive_and_download(self, archive_path, archive_format, archive_token):
 
         with make_writer(self, archive_format) as archive:
@@ -109,10 +121,6 @@ class DownloadArchiveHandler(IPythonHandler):
                     file_name = os.path.join(root, file_)
                     self.log.debug("{}\n".format(file_name))
                     archive.add(file_name, os.path.join(root[prefix:], file_))
-                    yield self.flush()
-
-        self.set_cookie("archiveToken", archive_token)
-        self.finish()
 
 
 class ExtractArchiveHandler(IPythonHandler):
