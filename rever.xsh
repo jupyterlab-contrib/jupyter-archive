@@ -20,4 +20,4 @@ def run_tests():
 @activity
 def publish_npm():
     echo "Publish package to NPM"
-    yarn publish --access=public
+    yarn publish --access=public --new-version $VERSION
