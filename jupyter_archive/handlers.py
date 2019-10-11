@@ -9,6 +9,11 @@ from notebook.base.handlers import IPythonHandler
 from notebook.utils import url2path
 
 
+# The delay in ms at which we send the chunk of data
+# to the client.
+ARCHIVE_DOWNLOAD_FLUSH_DELAY = 100
+
+
 class ArchiveStream():
     def __init__(self, handler):
         self.handler = handler
@@ -92,23 +97,20 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
 
-        self.flush_cb = ioloop.PeriodicCallback(self.flush, 100)
+        self.canceled = False
+        self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
         self.flush_cb.start()
 
         args = (archive_path, archive_format, archive_token)
-        try:
-            yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
+        yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
-        ## FIXME: Catching the exception does not work.
-        except Exception:
+        if self.canceled:
             self.log.info('Download canceled.')
-
         else:
             self.flush()
-            self.set_cookie("archiveToken", archive_token)
-
             self.log.info('Finished downloading {}.'.format(archive_filename))
 
+        self.set_cookie("archiveToken", archive_token)
         self.flush_cb.stop()
         self.finish()
 
@@ -119,8 +121,16 @@ class DownloadArchiveHandler(IPythonHandler):
             for root, _, files in os.walk(archive_path):
                 for file_ in files:
                     file_name = os.path.join(root, file_)
-                    self.log.debug("{}\n".format(file_name))
-                    archive.add(file_name, os.path.join(root[prefix:], file_))
+                    if not self.canceled:
+                        self.log.debug("{}\n".format(file_name))
+                        archive.add(file_name, os.path.join(root[prefix:], file_))
+                    else:
+                        break
+
+    def on_connection_close(self):
+        super().on_connection_close()
+        self.canceled = True
+        self.flush_cb.stop()
 
 
 class ExtractArchiveHandler(IPythonHandler):
