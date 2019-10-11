@@ -1,6 +1,6 @@
 {
   "name": "@hadim/jupyter-archive",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "Make, download and extract archive files.",
   "keywords": [
     "jupyter",

@@ -75,5 +75,5 @@ Under BSD license. See [LICENSE](LICENSE).
 
 ## Release a new version
 
-- Install those packages: `conda install twine rever`
+- Install [rever](https://regro.github.io/rever-docs/index.html): `conda install rever`
 - Run: `rever <VERSION>`
