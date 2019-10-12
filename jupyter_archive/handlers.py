@@ -9,11 +9,6 @@ from notebook.base.handlers import IPythonHandler
 from notebook.utils import url2path
 
 
-# The delay in ms at which we send the chunk of data
-# to the client.
-ARCHIVE_DOWNLOAD_FLUSH_DELAY = 100
-
-
 class ArchiveStream():
     def __init__(self, handler):
         self.handler = handler
@@ -96,41 +91,23 @@ class DownloadArchiveHandler(IPythonHandler):
         self.set_header('cache-control', 'no-cache')
         self.set_header('content-disposition',
                         'attachment; filename={}'.format(archive_filename))
-
-        self.canceled = False
-        self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
-        self.flush_cb.start()
-
-        args = (archive_path, archive_format, archive_token)
-        yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
-
-        if self.canceled:
+                        
+        try:
+            with make_writer(self, archive_format) as archive:
+                prefix = len(str(archive_path.parent)) + len(os.path.sep)
+                for root, _, files in os.walk(archive_path):
+                    for file_ in files:
+                        file_name = os.path.join(root, file_)
+                        self.log.debug("{}\n".format(file_name))
+                        yield ioloop.IOLoop.current().run_in_executor(None, archive.add, file_name, os.path.join(root[prefix:], file_))
+                        yield self.flush()
+        except iostream.StreamClosedError:
             self.log.info('Download canceled.')
         else:
-            self.flush()
             self.log.info('Finished downloading {}.'.format(archive_filename))
 
         self.set_cookie("archiveToken", archive_token)
-        self.flush_cb.stop()
         self.finish()
-
-    def archive_and_download(self, archive_path, archive_format, archive_token):
-
-        with make_writer(self, archive_format) as archive:
-            prefix = len(str(archive_path.parent)) + len(os.path.sep)
-            for root, _, files in os.walk(archive_path):
-                for file_ in files:
-                    file_name = os.path.join(root, file_)
-                    if not self.canceled:
-                        self.log.debug("{}\n".format(file_name))
-                        archive.add(file_name, os.path.join(root[prefix:], file_))
-                    else:
-                        break
-
-    def on_connection_close(self):
-        super().on_connection_close()
-        self.canceled = True
-        self.flush_cb.stop()
 
 
 class ExtractArchiveHandler(IPythonHandler):
