@@ -7,7 +7,8 @@ import { each } from "@phosphor/algorithm";
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
 import { URLExt, ISettingRegistry } from "@jupyterlab/coreutils";
-import { showErrorMessage } from "@jupyterlab/apputils";
+import { showErrorMessage, showDialog, Dialog } from "@jupyterlab/apputils";
+import { Menu } from "@phosphor/widgets";
 
 const DIRECTORIES_URL = "directories";
 const EXTRACT_ARCHVE_URL = "extract-archive";
@@ -15,7 +16,8 @@ const EXTRACT_ARCHVE_URL = "extract-archive";
 namespace CommandIDs {
   export const downloadArchive = "filebrowser:download-archive";
   export const extractArchive = "filebrowser:extract-archive";
-  export const downloadArchiveCurrentFolder = "filebrowser:download-archive-current-folder";
+  export const downloadArchiveCurrentFolder =
+    "filebrowser:download-archive-current-folder";
 }
 
 function downloadArchiveRequest(
@@ -56,8 +58,8 @@ function downloadArchiveRequest(
   } else {
     let element = document.createElement("a");
     document.body.appendChild(element);
-    element.setAttribute('href', url);
-    element.setAttribute('download', '');
+    element.setAttribute("href", url);
+    element.setAttribute("download", "");
     element.click();
     document.body.removeChild(element);
   }
@@ -107,54 +109,113 @@ const extension: JupyterFrontEndPlugin<void> = {
     const { commands } = app;
     const { tracker } = factory;
 
+    const allowedArchiveExtensions = [
+      ".zip",
+      ".tgz",
+      ".tar.gz",
+      ".tbz",
+      ".tbz2",
+      ".tar.bz",
+      ".tar.bz2",
+      ".txz",
+      ".tar.xz"
+    ];
     let archiveFormat: string = "zip";
+
+    // Create submenu
+    const archives = new Menu({
+      commands
+    });
+    archives.title.label = "Download As ";
+    archives.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
+
+    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach(format =>
+      archives.addItem({
+        command: CommandIDs.downloadArchive,
+        args: { format }
+      })
+    );
 
     // Load the settings
     settingRegistry
       .load("@hadim/jupyter-archive:archive")
       .then(settings => {
         settings.changed.connect(settings => {
-          archiveFormat = settings.get("format").composite as string;
+          const newFormat = settings.get("format").composite as string;
+          if (
+            newFormat !== archiveFormat &&
+            (newFormat === null || archiveFormat === null)
+          ) {
+            showDialog({
+              title: "Information",
+              body:
+                "You will need to reload the page to apply the new default archive format.",
+              buttons: [Dialog.okButton()]
+            });
+          } else {
+            archiveFormat = newFormat;
+          }
         });
         archiveFormat = settings.get("format").composite as string;
+      })
+      .then(() => {
+        if (archiveFormat === null) {
+          app.contextMenu.addItem({
+            selector: selectorOnlyDir,
+            rank: 10,
+            type: "submenu",
+            submenu: archives
+          });
+        } else {
+          app.contextMenu.addItem({
+            command: CommandIDs.downloadArchive,
+            selector: selectorOnlyDir,
+            rank: 10
+          });
+        }
       })
       .catch(reason => {
         console.error(reason);
         showErrorMessage(
-          "Fail to read settings for '@jupyterlab/archive:archive'",
+          "Fail to read settings for '@hadim/jupyter-archive:archive'",
           reason
         );
       });
 
     // matches anywhere on filebrowser
-    const selectorContent = '.jp-DirListing-content';
+    const selectorContent = ".jp-DirListing-content";
 
     // matches all filebrowser items
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
 
-    // Add the 'download_archive' command to the file's menu.
+    // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
-      execute: () => {
+      execute: args => {
         const widget = tracker.currentWidget;
         if (widget) {
           each(widget.selectedItems(), item => {
             if (item.type == "directory") {
-              downloadArchiveRequest(item.path, archiveFormat);
+              const format = args["format"] as string;
+              downloadArchiveRequest(
+                item.path,
+                allowedArchiveExtensions.indexOf("." + format) >= 0
+                  ? format
+                  : archiveFormat
+              );
             }
           });
         }
       },
-      iconClass: "jp-MaterialIcon jp-DownloadIcon",
-      label: "Download as an archive"
+      iconClass: args =>
+        "format" in args ? "" : "jp-MaterialIcon jp-DownloadIcon",
+      label: args => {
+        const format = (args["format"] as string) || "";
+        const label = format.replace(".", " ");
+        return label ? `${label} Archive` : "Download as an archive";
+      }
     });
 
-    app.contextMenu.addItem({
-      command: CommandIDs.downloadArchive,
-      selector: selectorOnlyDir,
-      rank: 10
-    });
-
-    // Add the 'extract_archive' command to the file's menu.
+    // Add the 'extractArchive' command to the file's menu.
     commands.addCommand(CommandIDs.extractArchive, {
       execute: () => {
         const widget = tracker.currentWidget;
@@ -170,9 +231,6 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add a command for each archive extensions
     // TODO: use only one command and accept multiple extensions.
-    const allowedArchiveExtensions = [".zip", ".tgz", ".tar.gz",".tbz", ".tbz2",
-                                      ".tar.bz", ".tar.bz2", ".txz", ".tar.xz"]
-
     allowedArchiveExtensions.forEach(extension => {
       const selector = '.jp-DirListing-item[title$="' + extension + '"]';
       app.contextMenu.addItem({
@@ -182,7 +240,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     });
 
-    // Add the 'download_archive' command to fiel browser content.
+    // Add the 'downloadArchiveCurrentFolder' command to file browser content.
     commands.addCommand(CommandIDs.downloadArchiveCurrentFolder, {
       execute: () => {
         const widget = tracker.currentWidget;
@@ -199,7 +257,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       selector: selectorContent,
       rank: 3
     });
-
   }
 };
 
