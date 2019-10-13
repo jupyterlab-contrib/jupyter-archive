@@ -3,7 +3,7 @@ import {
   JupyterFrontEndPlugin
 } from "@jupyterlab/application";
 import { showErrorMessage } from "@jupyterlab/apputils";
-import { ISettingRegistry, URLExt } from "@jupyterlab/coreutils";
+import { ISettingRegistry, URLExt, PathExt } from "@jupyterlab/coreutils";
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
 import { each } from "@phosphor/algorithm";
@@ -231,6 +231,14 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
       });
 
+    // matches anywhere on filebrowser
+    const selectorContent = ".jp-DirListing-content";
+
+    // matches directory filebrowser items
+    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
+    // matches file filebrowser items
+    const selectorNotDir = '.jp-DirListing-item[data-isdir="false"]';
+    
     // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
       execute: args => {
@@ -269,18 +277,30 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       },
       iconClass: "jp-MaterialIcon jp-DownCaretIcon",
+      isVisible: () => {
+        const widget = tracker.currentWidget;
+        let visible = false;
+        if (widget) {
+          const firstItem = widget.selectedItems().next();
+          const basename = PathExt.basename(firstItem.path);
+          const splitName = basename.split(".");
+          let lastTwoParts = "";
+          if (splitName.length >= 2) {
+            lastTwoParts = "." + splitName.splice(splitName.length - 2, 2).join(".");
+          }
+          visible =
+            allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >=
+              0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
+        }
+        return visible;
+      },
       label: "Extract Archive"
     });
 
-    // Add a command for each archive extensions
-    // TODO: use only one command and accept multiple extensions.
-    allowedArchiveExtensions.forEach(extension => {
-      const selector = '.jp-DirListing-item[title$="' + extension + '"]';
-      app.contextMenu.addItem({
-        command: CommandIDs.extractArchive,
-        selector: selector,
-        rank: 10
-      });
+    app.contextMenu.addItem({
+      command: CommandIDs.extractArchive,
+      selector: selectorNotDir,
+      rank: 10
     });
 
     // Add the 'downloadArchiveCurrentFolder' command to file browser content.
