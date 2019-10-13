@@ -6,7 +6,7 @@ import {
 import { each } from "@phosphor/algorithm";
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
-import { URLExt, ISettingRegistry } from "@jupyterlab/coreutils";
+import { URLExt, ISettingRegistry, PathExt } from "@jupyterlab/coreutils";
 import { showErrorMessage } from "@jupyterlab/apputils";
 
 const DIRECTORIES_URL = "directories";
@@ -15,7 +15,8 @@ const EXTRACT_ARCHVE_URL = "extract-archive";
 namespace CommandIDs {
   export const downloadArchive = "filebrowser:download-archive";
   export const extractArchive = "filebrowser:extract-archive";
-  export const downloadArchiveCurrentFolder = "filebrowser:download-archive-current-folder";
+  export const downloadArchiveCurrentFolder =
+    "filebrowser:download-archive-current-folder";
 }
 
 function downloadArchiveRequest(
@@ -56,8 +57,8 @@ function downloadArchiveRequest(
   } else {
     let element = document.createElement("a");
     document.body.appendChild(element);
-    element.setAttribute('href', url);
-    element.setAttribute('download', '');
+    element.setAttribute("href", url);
+    element.setAttribute("download", "");
     element.click();
     document.body.removeChild(element);
   }
@@ -127,10 +128,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
 
     // matches anywhere on filebrowser
-    const selectorContent = '.jp-DirListing-content';
+    const selectorContent = ".jp-DirListing-content";
 
     // matches all filebrowser items
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
+
+    const selectorNotDir = '.jp-DirListing-item[data-isdir="false"]';
 
     // Add the 'download_archive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
@@ -165,21 +168,44 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       },
       iconClass: "jp-MaterialIcon jp-DownCaretIcon",
+      isVisible: () => {
+        const widget = tracker.currentWidget;
+        let visible = false;
+        if (widget) {
+          const firstItem = widget.selectedItems().next();
+          const basename = PathExt.basename(firstItem.path);
+          const splitName = basename.split(".");
+          let lastTwoParts = "";
+          if (splitName.length >= 2) {
+            lastTwoParts = "." + splitName.splice(splitName.length - 2, 2).join(".");
+          }
+          visible =
+            allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >=
+              0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
+        }
+        return visible;
+      },
       label: "Extract archive"
     });
 
     // Add a command for each archive extensions
     // TODO: use only one command and accept multiple extensions.
-    const allowedArchiveExtensions = [".zip", ".tgz", ".tar.gz",".tbz", ".tbz2",
-                                      ".tar.bz", ".tar.bz2", ".txz", ".tar.xz"]
+    const allowedArchiveExtensions = [
+      ".zip",
+      ".tgz",
+      ".tar.gz",
+      ".tbz",
+      ".tbz2",
+      ".tar.bz",
+      ".tar.bz2",
+      ".txz",
+      ".tar.xz"
+    ];
 
-    allowedArchiveExtensions.forEach(extension => {
-      const selector = '.jp-DirListing-item[title$="' + extension + '"]';
-      app.contextMenu.addItem({
-        command: CommandIDs.extractArchive,
-        selector: selector,
-        rank: 10
-      });
+    app.contextMenu.addItem({
+      command: CommandIDs.extractArchive,
+      selector: selectorNotDir,
+      rank: 10
     });
 
     // Add the 'download_archive' command to fiel browser content.
@@ -199,7 +225,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       selector: selectorContent,
       rank: 3
     });
-
   }
 };
 
