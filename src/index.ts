@@ -2,16 +2,27 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from "@jupyterlab/application";
-
-import { each } from "@phosphor/algorithm";
+import { showErrorMessage } from "@jupyterlab/apputils";
+import { ISettingRegistry, URLExt } from "@jupyterlab/coreutils";
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
-import { URLExt, ISettingRegistry } from "@jupyterlab/coreutils";
-import { showErrorMessage, showDialog, Dialog } from "@jupyterlab/apputils";
+import { each } from "@phosphor/algorithm";
+import { IDisposable } from "@phosphor/disposable";
 import { Menu } from "@phosphor/widgets";
 
 const DIRECTORIES_URL = "directories";
 const EXTRACT_ARCHVE_URL = "extract-archive";
+type ArchiveFormat =
+  | null
+  | "zip"
+  | "tgz"
+  | "tar.gz"
+  | "tbz"
+  | "tbz2"
+  | "tar.bz"
+  | "tar.bz2"
+  | "txz"
+  | "tar.xz";
 
 namespace CommandIDs {
   export const downloadArchive = "filebrowser:download-archive";
@@ -22,7 +33,7 @@ namespace CommandIDs {
 
 function downloadArchiveRequest(
   path: string,
-  archiveFormat: string
+  archiveFormat: ArchiveFormat
 ): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
@@ -120,59 +131,97 @@ const extension: JupyterFrontEndPlugin<void> = {
       ".txz",
       ".tar.xz"
     ];
-    let archiveFormat: string = "zip";
+    let archiveFormat: ArchiveFormat; // Default value read from settings
 
-    // Create submenu
-    const archives = new Menu({
+    // matches anywhere on filebrowser
+    const selectorContent = ".jp-DirListing-content";
+
+    // matches all filebrowser items
+    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
+
+    // Create submenus
+    const archiveFolder = new Menu({
       commands
     });
-    archives.title.label = "Download As ";
-    archives.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
+    archiveFolder.title.label = "Download As";
+    archiveFolder.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
+    const archiveCurrentFolder = new Menu({
+      commands
+    });
+    archiveCurrentFolder.title.label = "Download Current Folder As";
+    archiveCurrentFolder.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
 
-    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach(format =>
-      archives.addItem({
+    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach(format => {
+      archiveFolder.addItem({
         command: CommandIDs.downloadArchive,
         args: { format }
-      })
-    );
+      });
+      archiveCurrentFolder.addItem({
+        command: CommandIDs.downloadArchiveCurrentFolder,
+        args: { format }
+      });
+    });
+
+    // Reference to menu items
+    let archiveFolderItem: IDisposable;
+    let archiveCurrentFolderItem: IDisposable;
+
+    function updateFormat(newFormat: ArchiveFormat, oldFormat: ArchiveFormat) {
+      if (newFormat !== oldFormat) {
+        if (
+          newFormat === null ||
+          oldFormat === null ||
+          oldFormat === undefined
+        ) {
+          if (oldFormat !== undefined) {
+            archiveFolderItem.dispose();
+            archiveCurrentFolderItem.dispose();
+          }
+
+          if (newFormat === null) {
+            archiveFolderItem = app.contextMenu.addItem({
+              selector: selectorOnlyDir,
+              rank: 10,
+              type: "submenu",
+              submenu: archiveFolder
+            });
+
+            archiveCurrentFolderItem = app.contextMenu.addItem({
+              selector: selectorContent,
+              rank: 3,
+              type: "submenu",
+              submenu: archiveCurrentFolder
+            });
+          } else {
+            archiveFolderItem = app.contextMenu.addItem({
+              command: CommandIDs.downloadArchive,
+              selector: selectorOnlyDir,
+              rank: 10
+            });
+
+            archiveCurrentFolderItem = app.contextMenu.addItem({
+              command: CommandIDs.downloadArchiveCurrentFolder,
+              selector: selectorContent,
+              rank: 3
+            });
+          }
+        }
+
+        archiveFormat = newFormat;
+      }
+    }
 
     // Load the settings
     settingRegistry
       .load("@hadim/jupyter-archive:archive")
       .then(settings => {
         settings.changed.connect(settings => {
-          const newFormat = settings.get("format").composite as string;
-          if (
-            newFormat !== archiveFormat &&
-            (newFormat === null || archiveFormat === null)
-          ) {
-            showDialog({
-              title: "Information",
-              body:
-                "You will need to reload the page to apply the new default archive format.",
-              buttons: [Dialog.okButton()]
-            });
-          } else {
-            archiveFormat = newFormat;
-          }
+          const newFormat = settings.get("format").composite as ArchiveFormat;
+          updateFormat(newFormat, archiveFormat);
         });
-        archiveFormat = settings.get("format").composite as string;
-      })
-      .then(() => {
-        if (archiveFormat === null) {
-          app.contextMenu.addItem({
-            selector: selectorOnlyDir,
-            rank: 10,
-            type: "submenu",
-            submenu: archives
-          });
-        } else {
-          app.contextMenu.addItem({
-            command: CommandIDs.downloadArchive,
-            selector: selectorOnlyDir,
-            rank: 10
-          });
-        }
+
+        const newFormat = settings.get("format").composite as ArchiveFormat;
+        updateFormat(newFormat, archiveFormat);
       })
       .catch(reason => {
         console.error(reason);
@@ -182,12 +231,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
       });
 
-    // matches anywhere on filebrowser
-    const selectorContent = ".jp-DirListing-content";
-
-    // matches all filebrowser items
-    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
-
     // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
       execute: args => {
@@ -195,7 +238,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (widget) {
           each(widget.selectedItems(), item => {
             if (item.type == "directory") {
-              const format = args["format"] as string;
+              const format = args["format"] as ArchiveFormat;
               downloadArchiveRequest(
                 item.path,
                 allowedArchiveExtensions.indexOf("." + format) >= 0
@@ -209,9 +252,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       iconClass: args =>
         "format" in args ? "" : "jp-MaterialIcon jp-DownloadIcon",
       label: args => {
-        const format = (args["format"] as string) || "";
-        const label = format.replace(".", " ");
-        return label ? `${label} Archive` : "Download as an archive";
+        const format = (args["format"] as ArchiveFormat) || "";
+        const label = format.replace(".", " ").toLocaleUpperCase();
+        return label ? `${label} Archive` : "Download as an Archive";
       }
     });
 
@@ -226,7 +269,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       },
       iconClass: "jp-MaterialIcon jp-DownCaretIcon",
-      label: "Extract archive"
+      label: "Extract Archive"
     });
 
     // Add a command for each archive extensions
@@ -242,20 +285,27 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add the 'downloadArchiveCurrentFolder' command to file browser content.
     commands.addCommand(CommandIDs.downloadArchiveCurrentFolder, {
-      execute: () => {
+      execute: args => {
         const widget = tracker.currentWidget;
         if (widget) {
-          downloadArchiveRequest(widget.model.path, archiveFormat);
+          const format = args["format"] as ArchiveFormat;
+          downloadArchiveRequest(
+            widget.model.path,
+            allowedArchiveExtensions.indexOf("." + format) >= 0
+              ? format
+              : archiveFormat
+          );
         }
       },
-      iconClass: "jp-MaterialIcon jp-DownloadIcon",
-      label: "Download current folder as an archive"
-    });
-
-    app.contextMenu.addItem({
-      command: CommandIDs.downloadArchiveCurrentFolder,
-      selector: selectorContent,
-      rank: 3
+      iconClass: args =>
+        "format" in args ? "" : "jp-MaterialIcon jp-DownloadIcon",
+      label: args => {
+        const format = (args["format"] as ArchiveFormat) || "";
+        const label = format.replace(".", " ").toLocaleUpperCase();
+        return label
+          ? `${label} Archive`
+          : "Download Current Folder as an Archive";
+      }
     });
   }
 };
