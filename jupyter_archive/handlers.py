@@ -12,6 +12,17 @@ from notebook.utils import url2path
 # The delay in ms at which we send the chunk of data
 # to the client.
 ARCHIVE_DOWNLOAD_FLUSH_DELAY = 100
+SUPPORTED_FORMAT = [
+    "zip",
+    "tgz",
+    "tar.gz",
+    "tbz",
+    "tbz2",
+    "tar.bz",
+    "tar.bz2",
+    "txz",
+    "tar.xz"
+]
 
 
 class ArchiveStream():
@@ -84,6 +95,9 @@ class DownloadArchiveHandler(IPythonHandler):
 
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
+        if archive_format not in SUPPORTED_FORMAT:
+            self.log.error("Unsupported format {}.".format(archive_format))
+            raise web.HTTPError(404)
 
         archive_path = os.path.join(cm.root_dir, url2path(archive_path))
 

@@ -5,16 +5,19 @@
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
 
-Make, download and extract archive files.
+A Jupyter/Jupyterlab extension to make, download and extract archive files.
 
-The extension is composed of two extensions:
+Features:
 
-- A Jupyterlab extension (frontend).
-- A Jupyter server extension (backend).
+- Download selected or current folder as an archive.
+- Supported formats: 'zip', 'tar.gz', 'tar.bz2' and 'tar.xz'.
+- Archiving and downloading are non-blocking for Jupyter. UI can still be used.
+- Archive format can be set in the JLab settings.
+- Alternatively, you can choose the format in the file browser menu (the format setting needs to be set to `null`).
+- Decompress an archive directly in file browser.
+- Notebok client extension not available. [Contributions are welcome](https://github.com/hadim/jupyter-archive/issues/21).
 
 ![jupyter-archive in action](./archive.gif "jupyter-archive in action.")
-
-Note that the extension is inspired from [nbzip](https://github.com/data-8/nbzip).
 
 ## Prerequisites
 
@@ -22,16 +25,22 @@ Note that the extension is inspired from [nbzip](https://github.com/data-8/nbzip
 
 ## Installation
 
-This extension is meant to be integrated into Jupyter. In the meantime you can install it with:
+Using `pip`:
 
 ```bash
 pip install jupyter-archive
 jupyter lab build
 ```
 
-This will install both the server extension and the labextension needed by this plugin.
+Using `conda`:
 
-You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab-archive` server extension via `pip`.
+```bash
+conda install jupyter-archive
+```
+
+This will install both the server extension and the Jupyterlab extension needed by the plugin.
+
+You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab-archive` server extension via `pip` or `conda`.
 
 ## Development
 
@@ -72,6 +81,11 @@ pytest jupyter_archive/tests/
 ## License
 
 Under BSD license. See [LICENSE](LICENSE).
+
+## Authors
+
+- Hadrien Mary: [@hadim](https://github.com/hadim)
+- Frédéric Collonval: [@fcollonval](https://github.com/fcollonval)
 
 ## Release a new version
 
