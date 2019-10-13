@@ -3,10 +3,10 @@
   "description": "Archive handler options.",
   "properties": {
     "format": {
-      "type": "string",
-      "enum": ["zip", "tgz", "tar.gz","tbz", "tbz2", "tar.bz", "tar.bz2","txz", "tar.xz"],
+      "type": ["string", "null"],
+      "enum": [null, "zip", "tgz", "tar.gz","tbz", "tbz2", "tar.bz", "tar.bz2","txz", "tar.xz"],
       "title": "Archive format",
-      "description": "Archive format for compressing folder; one of ['zip', 'tgz', 'tar.gz', 'tbz', 'tbz2', 'tar.bz', 'tar.bz2', 'txz', 'tar.xz']",
+      "description": "Archive format for compressing folder; one of [null (submenu), 'zip', 'tgz', 'tar.gz', 'tbz', 'tbz2', 'tar.bz', 'tar.bz2', 'txz', 'tar.xz']",
       "default": "zip"
     }
   },
