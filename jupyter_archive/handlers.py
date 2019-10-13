@@ -1,5 +1,3 @@
-import os
-import asyncio
 import zipfile
 import tarfile
 import pathlib
@@ -80,10 +78,7 @@ class DownloadArchiveHandler(IPythonHandler):
         archive_token = self.get_argument('archiveToken')
         archive_format = self.get_argument('archiveFormat', 'zip')
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-
-        archive_path = pathlib.Path(archive_path)
-        archive_name = archive_path.name
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)        
         archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
 
         self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
@@ -94,12 +89,15 @@ class DownloadArchiveHandler(IPythonHandler):
                         
         try:
             with make_writer(self, archive_format) as archive:
-                prefix = len(str(archive_path.parent)) + len(os.path.sep)
-                for root, _, files in os.walk(archive_path):
-                    for file_ in files:
-                        file_name = os.path.join(root, file_)
+                for file_name in archive_path.rglob("*"):
+                    if file_name.is_file():
                         self.log.debug("{}\n".format(file_name))
-                        yield ioloop.IOLoop.current().run_in_executor(None, archive.add, file_name, os.path.join(root[prefix:], file_))
+                        yield ioloop.IOLoop.current().run_in_executor(
+                            None, 
+                            archive.add, 
+                            file_name, 
+                            file_name.relative_to(archive_path.parent)
+                        )
                         yield self.flush()
         except iostream.StreamClosedError:
             self.log.info('Download canceled.')
@@ -124,8 +122,7 @@ class ExtractArchiveHandler(IPythonHandler):
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-        archive_path = pathlib.Path(archive_path)
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
 
         yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, archive_path)
 
