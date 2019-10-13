@@ -136,8 +136,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     // matches anywhere on filebrowser
     const selectorContent = ".jp-DirListing-content";
 
-    // matches all filebrowser items
+    // matches directory filebrowser items
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
+
+    // matches file filebrowser items
+    const selectorNotDir = '.jp-DirListing-item[data-isdir="false"]';
 
     // Create submenus
     const archiveFolder = new Menu({
@@ -231,14 +234,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
       });
 
-    // matches anywhere on filebrowser
-    const selectorContent = ".jp-DirListing-content";
-
-    // matches directory filebrowser items
-    const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
-    // matches file filebrowser items
-    const selectorNotDir = '.jp-DirListing-item[data-isdir="false"]';
-    
     // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
       execute: args => {
