@@ -75,7 +75,7 @@ jupyter lab --watch --no-browser --NotebookApp.token=''
 Test the server extension:
 
 ```bash
-pytest jupyter_archive/tests/
+pytest -v jupyter_archive/tests/
 ```
 
 ## License

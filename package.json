@@ -38,8 +38,8 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^1.0.0",
-    "@jupyterlab/filebrowser": "^1.0.0"
+    "@jupyterlab/application": "^1.2.0",
+    "@jupyterlab/filebrowser": "^1.2.0"
   },
   "devDependencies": {
     "mkdirp": "^0.5.1",
