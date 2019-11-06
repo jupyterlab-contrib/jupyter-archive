@@ -89,5 +89,5 @@ Under BSD license. See [LICENSE](LICENSE).
 
 ## Release a new version
 
-- Install [rever](https://regro.github.io/rever-docs/index.html): `conda install rever`
+- Install [rever](https://regro.github.io/rever-docs/index.html) and twine: `conda install rever twine`
 - Run: `rever <VERSION>`
