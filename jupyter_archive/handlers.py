@@ -21,11 +21,11 @@ SUPPORTED_FORMAT = [
     "tar.bz",
     "tar.bz2",
     "txz",
-    "tar.xz"
+    "tar.xz",
 ]
 
 
-class ArchiveStream():
+class ArchiveStream:
     def __init__(self, handler):
         self.handler = handler
         self.position = 0
@@ -49,14 +49,14 @@ def make_writer(handler, archive_format="zip"):
     fileobj = ArchiveStream(handler)
 
     if archive_format == "zip":
-        archive_file = zipfile.ZipFile(fileobj, mode='w', compression=zipfile.ZIP_DEFLATED)
+        archive_file = zipfile.ZipFile(fileobj, mode="w", compression=zipfile.ZIP_DEFLATED)
         archive_file.add = archive_file.write
     elif archive_format in ["tgz", "tar.gz"]:
-        archive_file = tarfile.open(fileobj=fileobj, mode='w|gz')
+        archive_file = tarfile.open(fileobj=fileobj, mode="w|gz")
     elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
-        archive_file = tarfile.open(fileobj=fileobj, mode='w|bz2')
+        archive_file = tarfile.open(fileobj=fileobj, mode="w|bz2")
     elif archive_format in ["txz", "tar.xz"]:
-        archive_file = tarfile.open(fileobj=fileobj, mode='w|xz')
+        archive_file = tarfile.open(fileobj=fileobj, mode="w|xz")
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
     return archive_file
@@ -64,23 +64,22 @@ def make_writer(handler, archive_format="zip"):
 
 def make_reader(archive_path):
 
-    archive_format = ''.join(archive_path.suffixes)[1:]
+    archive_format = "".join(archive_path.suffixes)[1:]
 
     if archive_format == "zip":
-        archive_file = zipfile.ZipFile(archive_path, mode='r')
+        archive_file = zipfile.ZipFile(archive_path, mode="r")
     elif archive_format in ["tgz", "tar.gz"]:
-        archive_file = tarfile.open(archive_path, mode='r|gz')
+        archive_file = tarfile.open(archive_path, mode="r|gz")
     elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
-        archive_file = tarfile.open(archive_path, mode='r|bz2')
+        archive_file = tarfile.open(archive_path, mode="r|bz2")
     elif archive_format in ["txz", "tar.xz"]:
-        archive_file = tarfile.open(archive_path, mode='r|xz')
+        archive_file = tarfile.open(archive_path, mode="r|xz")
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
     return archive_file
 
 
 class DownloadArchiveHandler(IPythonHandler):
-
     @web.authenticated
     @gen.coroutine
     def get(self, archive_path, include_body=False):
@@ -93,8 +92,8 @@ class DownloadArchiveHandler(IPythonHandler):
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
-        archive_token = self.get_argument('archiveToken')
-        archive_format = self.get_argument('archiveFormat', 'zip')
+        archive_token = self.get_argument("archiveToken")
+        archive_format = self.get_argument("archiveFormat", "zip")
         if archive_format not in SUPPORTED_FORMAT:
             self.log.error("Unsupported format {}.".format(archive_format))
             raise web.HTTPError(404)
@@ -105,11 +104,10 @@ class DownloadArchiveHandler(IPythonHandler):
         archive_name = archive_path.name
         archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
 
-        self.log.info('Prepare {} for archiving and downloading.'.format(archive_filename))
-        self.set_header('content-type', 'application/octet-stream')
-        self.set_header('cache-control', 'no-cache')
-        self.set_header('content-disposition',
-                        'attachment; filename={}'.format(archive_filename))
+        self.log.info("Prepare {} for archiving and downloading.".format(archive_filename))
+        self.set_header("content-type", "application/octet-stream")
+        self.set_header("cache-control", "no-cache")
+        self.set_header("content-disposition", "attachment; filename={}".format(archive_filename))
 
         self.canceled = False
         self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
@@ -119,10 +117,10 @@ class DownloadArchiveHandler(IPythonHandler):
         yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
         if self.canceled:
-            self.log.info('Download canceled.')
+            self.log.info("Download canceled.")
         else:
             self.flush()
-            self.log.info('Finished downloading {}.'.format(archive_filename))
+            self.log.info("Finished downloading {}.".format(archive_filename))
 
         self.set_cookie("archiveToken", archive_token)
         self.flush_cb.stop()
@@ -148,7 +146,6 @@ class DownloadArchiveHandler(IPythonHandler):
 
 
 class ExtractArchiveHandler(IPythonHandler):
-
     @web.authenticated
     @gen.coroutine
     def get(self, archive_path, include_body=False):
@@ -171,10 +168,10 @@ class ExtractArchiveHandler(IPythonHandler):
     def extract_archive(self, archive_path):
 
         archive_destination = archive_path.parent
-        self.log.info('Begin extraction of {} to {}.'.format(archive_path, archive_destination))
+        self.log.info("Begin extraction of {} to {}.".format(archive_path, archive_destination))
 
         archive_reader = make_reader(archive_path)
         with archive_reader as archive:
             archive.extractall(archive_destination)
 
-        self.log.info('Finished extracting {} to {}.'.format(archive_path, archive_destination))
+        self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))

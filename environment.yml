@@ -9,3 +9,4 @@ dependencies:
     - nodejs
     - git
     - yarn
+    - black

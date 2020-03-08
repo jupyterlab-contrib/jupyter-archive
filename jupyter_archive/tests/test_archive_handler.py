@@ -118,4 +118,3 @@ class ArchiveHandlerTest(NotebookTestBase):
 
             n_files = len(list(archive_dir_path.glob("*")))
             assert n_files == 3
-

@@ -38,13 +38,13 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^1.2.0",
-    "@jupyterlab/filebrowser": "^1.2.0"
+    "@jupyterlab/application": "^2.0.2",
+    "@jupyterlab/filebrowser": "^2.0.2"
   },
   "devDependencies": {
-    "mkdirp": "^0.5.1",
-    "rimraf": "^2.6.1",
-    "typescript": "~3.5.2",
+    "mkdirp": "^1.0.3",
+    "rimraf": "~3.0.0",
+    "typescript": "~3.7.3",
     "yarn": "~1.22"
   },
   "sideEffects": [
