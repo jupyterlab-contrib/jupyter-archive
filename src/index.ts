@@ -3,12 +3,13 @@ import {
   JupyterFrontEndPlugin
 } from "@jupyterlab/application";
 import { showErrorMessage } from "@jupyterlab/apputils";
-import { ISettingRegistry, URLExt, PathExt } from "@jupyterlab/coreutils";
+import { URLExt, PathExt } from "@jupyterlab/coreutils";
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
-import { each } from "@phosphor/algorithm";
-import { IDisposable } from "@phosphor/disposable";
-import { Menu } from "@phosphor/widgets";
+import { each } from "@lumino/algorithm";
+import { IDisposable } from "@lumino/disposable";
+import { Menu } from "@lumino/widgets";
 
 const DIRECTORIES_URL = "directories";
 const EXTRACT_ARCHVE_URL = "extract-archive";
@@ -285,7 +286,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
           visible =
             allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >=
-              0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
+            0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
         }
         return visible;
       },

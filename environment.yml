@@ -9,3 +9,6 @@ dependencies:
     - nodejs
     - git
     - yarn
+    - black
+    - rever
+    - twine
