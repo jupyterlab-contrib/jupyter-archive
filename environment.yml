@@ -10,3 +10,5 @@ dependencies:
     - git
     - yarn
     - black
+    - rever
+    - twine
