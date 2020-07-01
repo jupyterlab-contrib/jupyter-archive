@@ -130,7 +130,9 @@ class DownloadArchiveHandler(IPythonHandler):
 
         with make_writer(self, archive_format) as archive:
             prefix = len(str(archive_path.parent)) + len(os.path.sep)
-            for root, _, files in os.walk(archive_path):
+            for root, dirs, files in os.walk(archive_path, followlinks=True):
+                files = [f for f in files if not f[0] == '.']
+                dirs[:] = [d for d in dirs if not d[0] == '.']
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     if not self.canceled:
