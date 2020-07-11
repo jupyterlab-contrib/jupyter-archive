@@ -126,11 +126,14 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb.stop()
         self.finish()
 
-    def archive_and_download(self, archive_path, archive_format, archive_token):
+    def archive_and_download(self, archive_path, archive_format, archive_token, follow_symlinks, download_hidden):
 
         with make_writer(self, archive_format) as archive:
             prefix = len(str(archive_path.parent)) + len(os.path.sep)
-            for root, dirs, files in os.walk(archive_path, followlinks=True):
+            for root, dirs, files in os.walk(archive_path, followlinks=follow_symlinks):
+                # This ensures that if download_hidden is false, then the
+                # hidden files are skipped when walking the directory.
+                if not download_hidden:
                 files = [f for f in files if not f[0] == '.']
                 dirs[:] = [d for d in dirs if not d[0] == '.']
                 for file_ in files:
