@@ -149,8 +149,8 @@ class DownloadArchiveHandler(IPythonHandler):
                 # This ensures that if download_hidden is false, then the
                 # hidden files are skipped when walking the directory.
                 if not download_hidden:
-                files = [f for f in files if not f[0] == '.']
-                dirs[:] = [d for d in dirs if not d[0] == '.']
+                    files = [f for f in files if not f[0] == '.']
+                    dirs[:] = [d for d in dirs if not d[0] == '.']
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     if not self.canceled:
