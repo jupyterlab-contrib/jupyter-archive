@@ -69,7 +69,7 @@ class ArchiveHandlerTest(NotebookTestBase):
                 "download-archive-dir/test3.md",
                 "download-archive-dir/.test4.md",
                 "download-archive-dir/.test-hidden-folder/test5.md",
-                "download-archive-dir/symlink-test-dir/test7.md"
+                "download-archive-dir/symlink-test-dir/test6.md"
             }
         }
 
