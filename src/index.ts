@@ -34,7 +34,9 @@ namespace CommandIDs {
 
 function downloadArchiveRequest(
   path: string,
-  archiveFormat: ArchiveFormat
+  archiveFormat: ArchiveFormat,
+  followSymlinks: string,
+  downloadHidden: string
 ): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
