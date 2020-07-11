@@ -8,6 +8,20 @@
       "title": "Archive format",
       "description": "Archive format for compressing folder; one of [null (submenu), 'zip', 'tgz', 'tar.gz', 'tbz', 'tbz2', 'tar.bz', 'tar.bz2', 'txz', 'tar.xz']",
       "default": "zip"
+    },
+    "followSymlinks": {
+      "type": ["string"],
+      "enum": ["true", "false"],
+      "title": "Follow Symlinks",
+      "description": "Whether or not to resolve symlinks and add resulting files to the archive; one of ['true', 'false']",
+      "default": "true"
+    },
+    "downloadHidden": {
+      "type": ["string"],
+      "enum": ["true", "false"],
+      "title": "Download Hidden Files",
+      "description": "Whether or not to add hidden files to the archive when downloading; one of ['true', 'false']",
+      "default": "false"
     }
   },
   "additionalProperties": false,
