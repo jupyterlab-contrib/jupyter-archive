@@ -55,6 +55,8 @@ function downloadArchiveRequest(
 
   fullurl.searchParams.append("archiveToken", token(20));
   fullurl.searchParams.append("archiveFormat", archiveFormat);
+  fullurl.searchParams.append("followSymlinks", followSymlinks);
+  fullurl.searchParams.append("downloadHidden", downloadHidden);
 
   const xsrfTokenMatch = document.cookie.match("\\b_xsrf=([^;]*)\\b");
   if (xsrfTokenMatch) {
