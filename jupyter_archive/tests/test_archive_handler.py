@@ -29,15 +29,48 @@ class ArchiveHandlerTest(NotebookTestBase):
             f.write("hello2")
         with open(pjoin(archive_dir_path, "test3.md"), "w") as f:
             f.write("hello3")
+        with open(pjoin(archive_dir_path, ".test4.md"), "w") as f:
+            f.write("hello4")
+        os.makedirs(pjoin(archive_dir_path, ".test-hidden-folder"))
+        with open(pjoin(archive_dir_path, ".test-hidden-folder", "test5.md"), "w") as f:
+            f.write("hello5")
+        symlink_dir_path = pjoin(nbdir, "symlink-archive-dir")
+        os.makedirs(symlink_dir_path)
+        with open(pjoin(symlink_dir_path, "test6.md"), "w") as f:
+            f.write("hello6")
+        os.symlink(symlink_dir_path, pjoin(archive_dir_path, "symlink-test-dir"))
 
         # Try to download the created folder.
         archive_relative_path = os.path.basename(archive_dir_path)
-        url_template = "directories/{}?archiveToken=564646&archiveFormat={}"
+        url_template = "directories/{}?archiveToken=564646&archiveFormat={}&followSymlinks={}&downloadHidden={}"
 
         file_lists = {
-            "download-archive-dir/test2.txt",
-            "download-archive-dir/test1.txt",
-            "download-archive-dir/test3.md",
+            "falsefalse": {
+                "download-archive-dir/test2.txt",
+                "download-archive-dir/test1.txt",
+                "download-archive-dir/test3.md",
+            },
+            "falsetrue": {
+                "download-archive-dir/test2.txt",
+                "download-archive-dir/test1.txt",
+                "download-archive-dir/test3.md",
+                "download-archive-dir/.test4.md",
+                "download-archive-dir/.test-hidden-folder/test5.md",
+            },
+            "truefalse": {
+                "download-archive-dir/test2.txt",
+                "download-archive-dir/test1.txt",
+                "download-archive-dir/test3.md",
+                "download-archive-dir/symlink-test-dir/test6.md"
+            },
+            "truetrue": {
+                "download-archive-dir/test2.txt",
+                "download-archive-dir/test1.txt",
+                "download-archive-dir/test3.md",
+                "download-archive-dir/.test4.md",
+                "download-archive-dir/.test-hidden-folder/test5.md",
+                "download-archive-dir/symlink-test-dir/test6.md"
+            }
         }
 
         format_mode = {
@@ -52,18 +85,21 @@ class ArchiveHandlerTest(NotebookTestBase):
             "tar.xz": "r|xz",
         }
 
-        for format, mode in format_mode.items():
-            url = url_template.format(archive_relative_path, format)
-            r = self.request("GET", url)
-            assert r.status_code == 200
-            assert r.headers["content-type"] == "application/octet-stream"
-            assert r.headers["cache-control"] == "no-cache"
-            if format == "zip":
-                with zipfile.ZipFile(io.BytesIO(r.content), mode=mode) as zf:
-                    assert set(zf.namelist()) == file_lists
-            else:
-                with tarfile.open(fileobj=io.BytesIO(r.content), mode=mode) as tf:
-                    assert set(map(lambda m: m.name, tf.getmembers())) == file_lists
+        for followSymlinks in ["true", "false"]:
+            for download_hidden in ["true", "false"]:
+                file_list = file_lists[followSymlinks + download_hidden]
+                for format, mode in format_mode.items():
+                    url = url_template.format(archive_relative_path, format, followSymlinks, download_hidden)
+                    r = self.request("GET", url)
+                    assert r.status_code == 200
+                    assert r.headers["content-type"] == "application/octet-stream"
+                    assert r.headers["cache-control"] == "no-cache"
+                    if format == "zip":
+                        with zipfile.ZipFile(io.BytesIO(r.content), mode=mode) as zf:
+                            assert set(zf.namelist()) == file_list
+                    else:
+                        with tarfile.open(fileobj=io.BytesIO(r.content), mode=mode) as tf:
+                            assert set(map(lambda m: m.name, tf.getmembers())) == file_list
 
     def test_extract(self):
 

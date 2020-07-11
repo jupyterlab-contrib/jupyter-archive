@@ -34,7 +34,9 @@ namespace CommandIDs {
 
 function downloadArchiveRequest(
   path: string,
-  archiveFormat: ArchiveFormat
+  archiveFormat: ArchiveFormat,
+  followSymlinks: string,
+  downloadHidden: string
 ): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
@@ -53,6 +55,8 @@ function downloadArchiveRequest(
 
   fullurl.searchParams.append("archiveToken", token(20));
   fullurl.searchParams.append("archiveFormat", archiveFormat);
+  fullurl.searchParams.append("followSymlinks", followSymlinks);
+  fullurl.searchParams.append("downloadHidden", downloadHidden);
 
   const xsrfTokenMatch = document.cookie.match("\\b_xsrf=([^;]*)\\b");
   if (xsrfTokenMatch) {
@@ -133,6 +137,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       ".tar.xz"
     ];
     let archiveFormat: ArchiveFormat; // Default value read from settings
+    let followSymlinks: string; // Default value read from settings
+    let downloadHidden: string; // Default value read from settings
 
     // matches anywhere on filebrowser
     const selectorContent = ".jp-DirListing-content";
@@ -222,10 +228,14 @@ const extension: JupyterFrontEndPlugin<void> = {
         settings.changed.connect(settings => {
           const newFormat = settings.get("format").composite as ArchiveFormat;
           updateFormat(newFormat, archiveFormat);
+          followSymlinks = settings.get("followSymlinks").composite as string;
+          downloadHidden = settings.get("downloadHidden").composite as string;
         });
 
         const newFormat = settings.get("format").composite as ArchiveFormat;
         updateFormat(newFormat, archiveFormat);
+        followSymlinks = settings.get("followSymlinks").composite as string;
+        downloadHidden = settings.get("downloadHidden").composite as string;
       })
       .catch(reason => {
         console.error(reason);
@@ -247,7 +257,9 @@ const extension: JupyterFrontEndPlugin<void> = {
                 item.path,
                 allowedArchiveExtensions.indexOf("." + format) >= 0
                   ? format
-                  : archiveFormat
+                  : archiveFormat,
+              followSymlinks,
+              downloadHidden
               );
             }
           });
@@ -309,7 +321,9 @@ const extension: JupyterFrontEndPlugin<void> = {
             widget.model.path,
             allowedArchiveExtensions.indexOf("." + format) >= 0
               ? format
-              : archiveFormat
+              : archiveFormat,
+            followSymlinks,
+            downloadHidden
           );
         }
       },

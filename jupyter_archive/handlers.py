@@ -97,6 +97,21 @@ class DownloadArchiveHandler(IPythonHandler):
         if archive_format not in SUPPORTED_FORMAT:
             self.log.error("Unsupported format {}.".format(archive_format))
             raise web.HTTPError(404)
+        # Because urls can only pass strings, must check if string value is true
+        # or false. If it is not either value, then it is an invalid argument
+        # and raise http error 400.
+        if self.get_argument("followSymlinks", "true") == "true":
+            follow_symlinks = True
+        elif self.get_argument("followSymlinks", "true") == "false":
+            follow_symlinks = False
+        else:
+            raise web.HTTPError(400)
+        if self.get_argument("downloadHidden", "false") == "true":
+            download_hidden = True
+        elif self.get_argument("downloadHidden", "false") == "false":
+            download_hidden = False
+        else:
+            raise web.HTTPError(400)
 
         archive_path = os.path.join(cm.root_dir, url2path(archive_path))
 
@@ -113,7 +128,7 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
         self.flush_cb.start()
 
-        args = (archive_path, archive_format, archive_token)
+        args = (archive_path, archive_format, archive_token, follow_symlinks, download_hidden)
         yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
         if self.canceled:
@@ -126,11 +141,16 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb.stop()
         self.finish()
 
-    def archive_and_download(self, archive_path, archive_format, archive_token):
+    def archive_and_download(self, archive_path, archive_format, archive_token, follow_symlinks, download_hidden):
 
         with make_writer(self, archive_format) as archive:
             prefix = len(str(archive_path.parent)) + len(os.path.sep)
-            for root, _, files in os.walk(archive_path):
+            for root, dirs, files in os.walk(archive_path, followlinks=follow_symlinks):
+                # This ensures that if download_hidden is false, then the
+                # hidden files are skipped when walking the directory.
+                if not download_hidden:
+                    files = [f for f in files if not f[0] == '.']
+                    dirs[:] = [d for d in dirs if not d[0] == '.']
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     if not self.canceled:
