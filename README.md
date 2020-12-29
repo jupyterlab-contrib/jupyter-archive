@@ -36,7 +36,7 @@ jupyter lab build
 Using `conda`:
 
 ```bash
-conda install -c conda-forge jupyter-archive
+conda install -c conda-forge nodejs jupyter-archive
 jupyter lab build
 ```
 
