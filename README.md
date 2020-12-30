@@ -4,8 +4,9 @@
 [![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/jupyter-archive)](https://anaconda.org/conda-forge/jupyter-archive)
 
-A Jupyter/Jupyterlab extension to make, download and extract archive files.
+A Jupyterlab extension to make, download and extract archive files.
 
 Features:
 
@@ -17,11 +18,11 @@ Features:
 - Decompress an archive directly in file browser.
 - Notebok client extension not available. [Contributions are welcome](https://github.com/hadim/jupyter-archive/issues/21).
 
-![jupyter-archive in action](./archive.gif "jupyter-archive in action.")
+![jupyter-archive in action](https://raw.githubusercontent.com/hadim/jupyter-archive/master/archive.gif)
 
 ## Prerequisites
 
-- JupyterLab
+- JupyterLab >=2.0.0,<3.0.0
 
 ## Installation
 
@@ -35,12 +36,13 @@ jupyter lab build
 Using `conda`:
 
 ```bash
-conda install jupyter-archive
+conda install -c conda-forge nodejs jupyter-archive
+jupyter lab build
 ```
 
 This will install both the server extension and the Jupyterlab extension needed by the plugin.
 
-You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyterlab-archive` server extension via `pip` or `conda`.
+You can also install the labextension via Jupyterlab's extension manager GUI. Keep in mind that if you use the GUI, you'll still need to install the `jupyter-archive` server extension via `pip` or `conda`.
 
 ## Development
 

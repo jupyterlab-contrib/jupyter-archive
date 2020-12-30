@@ -1,3 +1,4 @@
+import pathlib
 from os.path import join as pjoin
 from setuptools import find_packages, setup
 
@@ -46,10 +47,11 @@ cmdclass["jsdeps"] = combine_commands(install_npm(HERE, build_cmd="build:all"), 
 setup(
     name=name.replace("_", "-"),
     version=version,
-    author="Hadrien Mary",
-    author_email="hadrien.mary@gmail.com",
+    author="Hadrien Mary, Frederic Collonval",
+    author_email="hadrien.mary@gmail.com, fcollonval@gmail.com",
     url="https://github.com/hadim/jupyter-archive/",
     description="A Jupyter/Jupyterlab extension to make, download and extract archive files.",
+    long_description=(pathlib.Path(HERE) / "README.md").read_text(),
     long_description_content_type="text/markdown",
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -65,4 +67,5 @@ setup(
     include_package_data=True,
     install_requires=["notebook"],
     extras_require={"test": ["jupyterlab", "pytest"]},
+    python_requires=">=3.5,<4"
 )

@@ -1,11 +1,9 @@
 channels:
     - conda-forge
-
 dependencies:
     - python>=3.6
     - pytest
-    - jupyterlab
+    - jupyterlab>=2.0.0,<3.0.0
     - cookiecutter
     - nodejs
     - git
-    - yarn
