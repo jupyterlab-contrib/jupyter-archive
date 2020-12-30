@@ -1,71 +1,85 @@
+"""
+jupyter-archive setup
+"""
+import json
 import pathlib
-from os.path import join as pjoin
-from setuptools import find_packages, setup
 
-from setupbase import (
-    create_cmdclass,
-    install_npm,
-    ensure_targets,
-    find_packages,
-    combine_commands,
-    ensure_python,
-    get_version,
-    HERE,
-)
+from jupyter_packaging import create_cmdclass, install_npm, ensure_targets, combine_commands, skip_if_exists
+import setuptools
+
+HERE = pathlib.Path(__file__).parent.resolve()
 
 # The name of the project
 name = "jupyter_archive"
 
-# Ensure a valid python version
-ensure_python(">=3.5")
-
 # Get our version
-version = get_version(pjoin(name, "_version.py"))
+with (HERE / "package.json").open() as f:
+    version = json.load(f)["version"]
 
-lab_path = pjoin(HERE, name, "labextension")
+lab_path = HERE / name / "labextension"
 
 # Representative files that should exist after a successful build
 jstargets = [
-    pjoin(HERE, "lib", "index.js"),
+    str(lab_path / "package.json"),
 ]
 
 package_data_spec = {name: ["*"]}
 
+labext_name = "@hadim/jupyter-archive"
+
 data_files_spec = [
-    ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
-    (
-        "etc/jupyter/jupyter_notebook_config.d",
-        "jupyter-config/jupyter_notebook_config.d",
-        "jupyter_archive.json",
-    ),
+    ("share/jupyter/labextensions/%s" % labext_name, str(lab_path), "**"),
+    ("share/jupyter/labextensions/%s" % labext_name, str(HERE), "install.json"),
+    ("etc/jupyter/jupyter_server_config.d", "jupyter-config", "jupyter-archive.json"),
 ]
 
 cmdclass = create_cmdclass("jsdeps", package_data_spec=package_data_spec, data_files_spec=data_files_spec)
 
-cmdclass["jsdeps"] = combine_commands(install_npm(HERE, build_cmd="build:all"), ensure_targets(jstargets),)
+js_command = combine_commands(
+    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
+    ensure_targets(jstargets),
+)
 
-setup(
+is_repo = (HERE / ".git").exists()
+if is_repo:
+    cmdclass["jsdeps"] = js_command
+else:
+    cmdclass["jsdeps"] = skip_if_exists(jstargets, js_command)
+
+long_description = (HERE / "README.md").read_text()
+
+setup_args = dict(
     name=name.replace("_", "-"),
     version=version,
     author="Hadrien Mary, Frederic Collonval",
     author_email="hadrien.mary@gmail.com, fcollonval@gmail.com",
     url="https://github.com/jupyterlab-contrib/jupyter-archive/",
-    description="A Jupyter/Jupyterlab extension to make, download and extract archive files.",
+    description="A Jupyterlab extension to make, download and extract archive files.",
     long_description=(pathlib.Path(HERE) / "README.md").read_text(),
     long_description_content_type="text/markdown",
     cmdclass=cmdclass,
-    packages=find_packages(),
+    packages=setuptools.find_packages(),
+    install_requires=[
+        "jupyterlab>=3.0.0rc13,==3.*",
+    ],
+    zip_safe=False,
+    include_package_data=True,
+    python_requires=">=3.6,<4",
+    license="BSD-3-Clause",
+    platforms="Linux, Mac OS X, Windows",
+    keywords=["Jupyter", "JupyterLab", "JupyterLab3"],
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Natural Language :: English",
         "License :: OSI Approved :: BSD License",
-        "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Framework :: Jupyter",
     ],
-    include_package_data=True,
-    install_requires=["notebook"],
-    extras_require={"test": ["jupyterlab", "pytest"]},
-    python_requires=">=3.5,<4"
 )
+
+
+if __name__ == "__main__":
+    setuptools.setup(**setup_args)

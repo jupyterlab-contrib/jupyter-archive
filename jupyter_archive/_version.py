@@ -1,4 +1,20 @@
-# Copyright (c) Project Jupyter.
-# Distributed under the terms of the Modified BSD License.
+__all__ = ["__version__"]
 
-__version__ = '2.2.0'
+
+def _fetchVersion():
+    import json
+    import pathlib
+
+    HERE = pathlib.Path(__file__).parent.resolve()
+
+    for d in HERE.rglob("package.json"):
+        try:
+            with d.open() as f:
+                return json.load(f)["version"]
+        except FileNotFoundError:
+            pass
+
+    raise FileNotFoundError(f"Could not find package.json under dir {HERE!s}")
+
+
+__version__ = _fetchVersion()

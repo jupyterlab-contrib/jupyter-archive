@@ -1,36 +1,36 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
-} from "@jupyterlab/application";
-import { showErrorMessage } from "@jupyterlab/apputils";
-import { URLExt, PathExt } from "@jupyterlab/coreutils";
-import { ISettingRegistry } from "@jupyterlab/settingregistry";
-import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
-import { ServerConnection } from "@jupyterlab/services";
-import { each } from "@lumino/algorithm";
-import { IDisposable } from "@lumino/disposable";
-import { Menu } from "@lumino/widgets";
-import { archiveIcon, unarchiveIcon } from "./icon";
+  JupyterFrontEndPlugin
+} from '@jupyterlab/application';
+import { showErrorMessage } from '@jupyterlab/apputils';
+import { URLExt, PathExt } from '@jupyterlab/coreutils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { ServerConnection } from '@jupyterlab/services';
+import { each } from '@lumino/algorithm';
+import { IDisposable } from '@lumino/disposable';
+import { Menu } from '@lumino/widgets';
+import { archiveIcon, unarchiveIcon } from './icon';
 
-const DIRECTORIES_URL = "directories";
-const EXTRACT_ARCHVE_URL = "extract-archive";
+const DIRECTORIES_URL = 'directories';
+const EXTRACT_ARCHIVE_URL = 'extract-archive';
 type ArchiveFormat =
   | null
-  | "zip"
-  | "tgz"
-  | "tar.gz"
-  | "tbz"
-  | "tbz2"
-  | "tar.bz"
-  | "tar.bz2"
-  | "txz"
-  | "tar.xz";
+  | 'zip'
+  | 'tgz'
+  | 'tar.gz'
+  | 'tbz'
+  | 'tbz2'
+  | 'tar.bz'
+  | 'tar.bz2'
+  | 'txz'
+  | 'tar.xz';
 
 namespace CommandIDs {
-  export const downloadArchive = "filebrowser:download-archive";
-  export const extractArchive = "filebrowser:extract-archive";
+  export const downloadArchive = 'filebrowser:download-archive';
+  export const extractArchive = 'filebrowser:extract-archive';
   export const downloadArchiveCurrentFolder =
-    "filebrowser:download-archive-current-folder";
+    'filebrowser:download-archive-current-folder';
 }
 
 function downloadArchiveRequest(
@@ -41,24 +41,27 @@ function downloadArchiveRequest(
 ): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
-  let baseUrl = settings.baseUrl;
+  const baseUrl = settings.baseUrl;
   let url = URLExt.join(baseUrl, DIRECTORIES_URL, URLExt.encodeParts(path));
 
   const fullurl = new URL(url);
 
   // Generate a random token.
-  const rand = () => Math.random().toString(36).substr(2);
-  const token = (length: number) =>
+  const rand = (): string =>
+    Math.random()
+      .toString(36)
+      .substr(2);
+  const token = (length: number): string =>
     (rand() + rand() + rand() + rand()).substr(0, length);
 
-  fullurl.searchParams.append("archiveToken", token(20));
-  fullurl.searchParams.append("archiveFormat", archiveFormat);
-  fullurl.searchParams.append("followSymlinks", followSymlinks);
-  fullurl.searchParams.append("downloadHidden", downloadHidden);
+  fullurl.searchParams.append('archiveToken', token(20));
+  fullurl.searchParams.append('archiveFormat', archiveFormat);
+  fullurl.searchParams.append('followSymlinks', followSymlinks);
+  fullurl.searchParams.append('downloadHidden', downloadHidden);
 
-  const xsrfTokenMatch = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+  const xsrfTokenMatch = document.cookie.match('\\b_xsrf=([^;]*)\\b');
   if (xsrfTokenMatch) {
-    fullurl.searchParams.append("_xsrf", xsrfTokenMatch[1]);
+    fullurl.searchParams.append('_xsrf', xsrfTokenMatch[1]);
   }
 
   url = fullurl.toString();
@@ -70,10 +73,10 @@ function downloadArchiveRequest(
     // Workaround https://bugs.chromium.org/p/chromium/issues/detail?id=455987
     window.open(url);
   } else {
-    let element = document.createElement("a");
+    const element = document.createElement('a');
     document.body.appendChild(element);
-    element.setAttribute("href", url);
-    element.setAttribute("download", "");
+    element.setAttribute('href', url);
+    element.setAttribute('download', '');
     element.click();
     document.body.removeChild(element);
   }
@@ -84,33 +87,31 @@ function downloadArchiveRequest(
 function extractArchiveRequest(path: string): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
-  let baseUrl = settings.baseUrl;
-  let url = URLExt.join(baseUrl, EXTRACT_ARCHVE_URL, URLExt.encodeParts(path));
+  const baseUrl = settings.baseUrl;
+  let url = URLExt.join(baseUrl, EXTRACT_ARCHIVE_URL, URLExt.encodeParts(path));
 
   const fullurl = new URL(url);
 
-  const xsrfTokenMatch = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+  const xsrfTokenMatch = document.cookie.match('\\b_xsrf=([^;]*)\\b');
   if (xsrfTokenMatch) {
-    fullurl.searchParams.append("_xsrf", xsrfTokenMatch[1]);
+    fullurl.searchParams.append('_xsrf', xsrfTokenMatch[1]);
   }
 
   url = fullurl.toString();
-  const request = { method: "GET" };
+  const request = { method: 'GET' };
 
-  return ServerConnection.makeRequest(url, request, settings).then(
-    (response) => {
-      if (response.status !== 200) {
-        throw new ServerConnection.ResponseError(response);
-      }
+  return ServerConnection.makeRequest(url, request, settings).then(response => {
+    if (response.status !== 200) {
+      throw new ServerConnection.ResponseError(response);
     }
-  );
+  });
 }
 
 /**
  * Initialization data for the jupyter-archive extension.
  */
 const extension: JupyterFrontEndPlugin<void> = {
-  id: "@jupyterlab/archive:archive",
+  id: '@hadim/jupyter-archive:archive',
   autoStart: true,
 
   requires: [IFileBrowserFactory, ISettingRegistry],
@@ -120,28 +121,28 @@ const extension: JupyterFrontEndPlugin<void> = {
     factory: IFileBrowserFactory,
     settingRegistry: ISettingRegistry
   ) => {
-    console.log("JupyterLab extension jupyter-archive is activated!");
+    console.log('JupyterLab extension jupyter-archive is activated!');
 
     const { commands } = app;
     const { tracker } = factory;
 
     const allowedArchiveExtensions = [
-      ".zip",
-      ".tgz",
-      ".tar.gz",
-      ".tbz",
-      ".tbz2",
-      ".tar.bz",
-      ".tar.bz2",
-      ".txz",
-      ".tar.xz",
+      '.zip',
+      '.tgz',
+      '.tar.gz',
+      '.tbz',
+      '.tbz2',
+      '.tar.bz',
+      '.tar.bz2',
+      '.txz',
+      '.tar.xz'
     ];
     let archiveFormat: ArchiveFormat; // Default value read from settings
     let followSymlinks: string; // Default value read from settings
     let downloadHidden: string; // Default value read from settings
 
     // matches anywhere on filebrowser
-    const selectorContent = ".jp-DirListing-content";
+    const selectorContent = '.jp-DirListing-content';
 
     // matches directory filebrowser items
     const selectorOnlyDir = '.jp-DirListing-item[data-isdir="true"]';
@@ -151,24 +152,24 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Create submenus
     const archiveFolder = new Menu({
-      commands,
+      commands
     });
-    archiveFolder.title.label = "Download As";
+    archiveFolder.title.label = 'Download As';
     archiveFolder.title.icon = archiveIcon;
     const archiveCurrentFolder = new Menu({
-      commands,
+      commands
     });
-    archiveCurrentFolder.title.label = "Download Current Folder As";
+    archiveCurrentFolder.title.label = 'Download Current Folder As';
     archiveCurrentFolder.title.icon = archiveIcon;
 
-    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach((format) => {
+    ['zip', 'tar.bz2', 'tar.gz', 'tar.xz'].forEach(format => {
       archiveFolder.addItem({
         command: CommandIDs.downloadArchive,
-        args: { format },
+        args: { format }
       });
       archiveCurrentFolder.addItem({
         command: CommandIDs.downloadArchiveCurrentFolder,
-        args: { format },
+        args: { format }
       });
     });
 
@@ -176,7 +177,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     let archiveFolderItem: IDisposable;
     let archiveCurrentFolderItem: IDisposable;
 
-    function updateFormat(newFormat: ArchiveFormat, oldFormat: ArchiveFormat) {
+    function updateFormat(
+      newFormat: ArchiveFormat,
+      oldFormat: ArchiveFormat
+    ): void {
       if (newFormat !== oldFormat) {
         if (
           newFormat === null ||
@@ -192,27 +196,27 @@ const extension: JupyterFrontEndPlugin<void> = {
             archiveFolderItem = app.contextMenu.addItem({
               selector: selectorOnlyDir,
               rank: 10,
-              type: "submenu",
-              submenu: archiveFolder,
+              type: 'submenu',
+              submenu: archiveFolder
             });
 
             archiveCurrentFolderItem = app.contextMenu.addItem({
               selector: selectorContent,
               rank: 3,
-              type: "submenu",
-              submenu: archiveCurrentFolder,
+              type: 'submenu',
+              submenu: archiveCurrentFolder
             });
           } else {
             archiveFolderItem = app.contextMenu.addItem({
               command: CommandIDs.downloadArchive,
               selector: selectorOnlyDir,
-              rank: 10,
+              rank: 10
             });
 
             archiveCurrentFolderItem = app.contextMenu.addItem({
               command: CommandIDs.downloadArchiveCurrentFolder,
               selector: selectorContent,
-              rank: 3,
+              rank: 3
             });
           }
         }
@@ -223,21 +227,21 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Load the settings
     settingRegistry
-      .load("@hadim/jupyter-archive:archive")
-      .then((settings) => {
-        settings.changed.connect((settings) => {
-          const newFormat = settings.get("format").composite as ArchiveFormat;
+      .load('@hadim/jupyter-archive:archive')
+      .then(settings => {
+        settings.changed.connect(settings => {
+          const newFormat = settings.get('format').composite as ArchiveFormat;
           updateFormat(newFormat, archiveFormat);
-          followSymlinks = settings.get("followSymlinks").composite as string;
-          downloadHidden = settings.get("downloadHidden").composite as string;
+          followSymlinks = settings.get('followSymlinks').composite as string;
+          downloadHidden = settings.get('downloadHidden').composite as string;
         });
 
-        const newFormat = settings.get("format").composite as ArchiveFormat;
+        const newFormat = settings.get('format').composite as ArchiveFormat;
         updateFormat(newFormat, archiveFormat);
-        followSymlinks = settings.get("followSymlinks").composite as string;
-        downloadHidden = settings.get("downloadHidden").composite as string;
+        followSymlinks = settings.get('followSymlinks').composite as string;
+        downloadHidden = settings.get('downloadHidden').composite as string;
       })
-      .catch((reason) => {
+      .catch(reason => {
         console.error(reason);
         showErrorMessage(
           "Fail to read settings for '@hadim/jupyter-archive:archive'",
@@ -247,15 +251,15 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
-      execute: (args) => {
+      execute: args => {
         const widget = tracker.currentWidget;
         if (widget) {
-          each(widget.selectedItems(), (item) => {
-            if (item.type == "directory") {
-              const format = args["format"] as ArchiveFormat;
+          each(widget.selectedItems(), item => {
+            if (item.type === 'directory') {
+              const format = args['format'] as ArchiveFormat;
               downloadArchiveRequest(
                 item.path,
-                allowedArchiveExtensions.indexOf("." + format) >= 0
+                allowedArchiveExtensions.indexOf('.' + format) >= 0
                   ? format
                   : archiveFormat,
                 followSymlinks,
@@ -265,12 +269,12 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       },
-      icon: (args) => ("format" in args ? "" : archiveIcon),
-      label: (args) => {
-        const format = (args["format"] as ArchiveFormat) || "";
-        const label = format.replace(".", " ").toLocaleUpperCase();
-        return label ? `${label} Archive` : "Download as an Archive";
-      },
+      icon: args => ('format' in args ? '' : archiveIcon),
+      label: args => {
+        const format = (args['format'] as ArchiveFormat) || '';
+        const label = format.replace('.', ' ').toLocaleUpperCase();
+        return label ? `${label} Archive` : 'Download as an Archive';
+      }
     });
 
     // Add the 'extractArchive' command to the file's menu.
@@ -278,7 +282,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
-          each(widget.selectedItems(), (item) => {
+          each(widget.selectedItems(), item => {
             extractArchiveRequest(item.path);
           });
         }
@@ -290,11 +294,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (widget) {
           const firstItem = widget.selectedItems().next();
           const basename = PathExt.basename(firstItem.path);
-          const splitName = basename.split(".");
-          let lastTwoParts = "";
+          const splitName = basename.split('.');
+          let lastTwoParts = '';
           if (splitName.length >= 2) {
             lastTwoParts =
-              "." + splitName.splice(splitName.length - 2, 2).join(".");
+              '.' + splitName.splice(splitName.length - 2, 2).join('.');
           }
           visible =
             allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >= 0 ||
@@ -302,24 +306,24 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
         return visible;
       },
-      label: "Extract Archive",
+      label: 'Extract Archive'
     });
 
     app.contextMenu.addItem({
       command: CommandIDs.extractArchive,
       selector: selectorNotDir,
-      rank: 10,
+      rank: 10
     });
 
     // Add the 'downloadArchiveCurrentFolder' command to file browser content.
     commands.addCommand(CommandIDs.downloadArchiveCurrentFolder, {
-      execute: (args) => {
+      execute: args => {
         const widget = tracker.currentWidget;
         if (widget) {
-          const format = args["format"] as ArchiveFormat;
+          const format = args['format'] as ArchiveFormat;
           downloadArchiveRequest(
             widget.model.path,
-            allowedArchiveExtensions.indexOf("." + format) >= 0
+            allowedArchiveExtensions.indexOf('.' + format) >= 0
               ? format
               : archiveFormat,
             followSymlinks,
@@ -327,16 +331,16 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
         }
       },
-      icon: (args) => ("format" in args ? "" : archiveIcon),
-      label: (args) => {
-        const format = (args["format"] as ArchiveFormat) || "";
-        const label = format.replace(".", " ").toLocaleUpperCase();
+      icon: args => ('format' in args ? '' : archiveIcon),
+      label: args => {
+        const format = (args['format'] as ArchiveFormat) || '';
+        const label = format.replace('.', ' ').toLocaleUpperCase();
         return label
           ? `${label} Archive`
-          : "Download Current Folder as an Archive";
-      },
+          : 'Download Current Folder as an Archive';
+      }
     });
-  },
+  }
 };
 
 export default extension;

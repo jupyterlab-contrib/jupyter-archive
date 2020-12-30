@@ -1,23 +1,29 @@
-from notebook.utils import url_path_join
-from .handlers import DownloadArchiveHandler
-from .handlers import ExtractArchiveHandler
+import json
+import pathlib
+
+from ._version import __version__
+from .handlers import setup_handlers
+
+HERE = pathlib.Path(__file__).parent.resolve()
+
+with (HERE / "labextension" / "package.json").open() as fid:
+    data = json.load(fid)
 
 
-# Jupyter Extension points
-def _jupyter_server_extension_paths():
+def _jupyter_labextension_paths():
+    return [{"src": "labextension", "dest": data["name"]}]
+
+
+def _jupyter_server_extension_points():
     return [{"module": "jupyter_archive"}]
 
 
-def load_jupyter_server_extension(nbapp):
+def _load_jupyter_server_extension(server_app):
+    """Registers the API handler to receive HTTP requests from the frontend extension.
 
-    # Add download handler.
-    base_url = url_path_join(nbapp.web_app.settings["base_url"], r"/directories/(.*)")
-    handlers = [(base_url, DownloadArchiveHandler)]
-    nbapp.web_app.add_handlers(".*", handlers)
-
-    # Add extract handler.
-    base_url = url_path_join(nbapp.web_app.settings["base_url"], r"/extract-archive/(.*)")
-    handlers = [(base_url, ExtractArchiveHandler)]
-    nbapp.web_app.add_handlers(".*", handlers)
-
-    nbapp.log.info("jupyter_archive is enabled.")
+    Parameters
+    ----------
+    server_app: jupyterlab.labapp.LabApp
+        JupyterLab application instance
+    """
+    setup_handlers(server_app.web_app)
