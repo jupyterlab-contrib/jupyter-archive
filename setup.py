@@ -49,7 +49,7 @@ setup(
     version=version,
     author="Hadrien Mary, Frederic Collonval",
     author_email="hadrien.mary@gmail.com, fcollonval@gmail.com",
-    url="https://github.com/hadim/jupyter-archive/",
+    url="https://github.com/jupyterlab-contrib/jupyter-archive/",
     description="A Jupyter/Jupyterlab extension to make, download and extract archive files.",
     long_description=(pathlib.Path(HERE) / "README.md").read_text(),
     long_description_content_type="text/markdown",

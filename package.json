@@ -7,9 +7,9 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/hadim/jupyter-archive",
+  "homepage": "https://github.com/jupyterlab-contrib/jupyter-archive",
   "bugs": {
-    "url": "https://github.com/hadim/jupyter-archive/issues"
+    "url": "https://github.com/jupyterlab-contrib/jupyter-archive/issues"
   },
   "license": "BSD-3-Clause",
   "author": "hadim",
@@ -23,7 +23,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hadim/jupyter-archive.git"
+    "url": "https://github.com/jupyterlab-contrib/jupyter-archive.git"
   },
   "scripts": {
     "build": "jlpm run build:lib",

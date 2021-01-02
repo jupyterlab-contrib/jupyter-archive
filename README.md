@@ -1,6 +1,6 @@
 # jupyter-archive
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://beta.mybinder.org/v2/gh/hadim/jupyter-archive/master?urlpath=lab)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab-contrib/jupyter-archive/master?urlpath=lab)
 [![Build Status](https://travis-ci.com/hadim/jupyter-archive.svg?branch=master)](https://travis-ci.com/hadim/jupyter-archive)
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
@@ -16,9 +16,9 @@ Features:
 - Archive format can be set in the JLab settings.
 - Alternatively, you can choose the format in the file browser menu (the format setting needs to be set to `null`).
 - Decompress an archive directly in file browser.
-- Notebok client extension not available. [Contributions are welcome](https://github.com/hadim/jupyter-archive/issues/21).
+- Notebok client extension not available. [Contributions are welcome](https://github.com/jupyterlab-contrib/jupyter-archive/issues/21).
 
-![jupyter-archive in action](https://raw.githubusercontent.com/hadim/jupyter-archive/master/archive.gif)
+![jupyter-archive in action](https://raw.githubusercontent.com/jupyterlab-contrib/jupyter-archive/master/archive.gif)
 
 ## Prerequisites
 
