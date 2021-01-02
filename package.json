@@ -1,6 +1,6 @@
 {
   "name": "@hadim/jupyter-archive",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "A Jupyterlab extension to make, download and extract archive files.",
   "keywords": [
     "jupyter",
@@ -26,26 +26,30 @@
     "url": "https://github.com/hadim/jupyter-archive.git"
   },
   "scripts": {
-    "build": "yarn run build:lib",
+    "build": "jlpm run build:lib",
     "build:labextension": "cd jupyter_archive && rimraf labextension && mkdirp labextension && cd labextension && npm pack ../..",
     "build:lib": "tsc",
-    "build:all": "yarn run build:labextension",
-    "clean": "yarn run clean:lib",
+    "build:all": "jlpm run build:labextension",
+    "clean": "jlpm run clean:lib",
     "clean:lib": "rimraf lib && rimraf tsconfig.tsbuildinfo",
     "clean:labextension": "rimraf jupyter_archive/labextension",
-    "clean:all": "yarn run clean:lib && yarn run clean:labextension",
-    "prepare": "yarn run clean && yarn run build",
+    "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
+    "prepare": "jlpm run clean && jlpm run build",
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^2.0.2",
-    "@jupyterlab/filebrowser": "^2.0.2"
+    "@jupyterlab/application": "^2.2.0",
+    "@jupyterlab/apputils": "^2.2.0",
+    "@jupyterlab/coreutils": "^4.2.0",
+    "@jupyterlab/filebrowser": "^2.2.0",
+    "@jupyterlab/services": "^5.2.0",
+    "@jupyterlab/settingregistry": "^2.2.0",
+    "@jupyterlab/ui-components": "^2.2.0"
   },
   "devDependencies": {
     "mkdirp": "^1.0.3",
     "rimraf": "~3.0.0",
-    "typescript": "~3.7.3",
-    "yarn": "~1.22"
+    "typescript": "~3.7.3"
   },
   "sideEffects": [
     "style/*.css"

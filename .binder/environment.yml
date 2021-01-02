@@ -3,7 +3,7 @@ channels:
 dependencies:
     - python>=3.6
     - pytest
-    - jupyterlab>=2.0.0,<3.0.0
+    - jupyterlab>=2.2.0,<3.0.0
     - cookiecutter
     - nodejs
     - git

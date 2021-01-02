@@ -1,15 +1,16 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
 } from "@jupyterlab/application";
 import { showErrorMessage } from "@jupyterlab/apputils";
 import { URLExt, PathExt } from "@jupyterlab/coreutils";
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { ISettingRegistry } from "@jupyterlab/settingregistry";
 import { IFileBrowserFactory } from "@jupyterlab/filebrowser";
 import { ServerConnection } from "@jupyterlab/services";
 import { each } from "@lumino/algorithm";
 import { IDisposable } from "@lumino/disposable";
 import { Menu } from "@lumino/widgets";
+import { archiveIcon, unarchiveIcon } from "./icon";
 
 const DIRECTORIES_URL = "directories";
 const EXTRACT_ARCHVE_URL = "extract-archive";
@@ -46,10 +47,7 @@ function downloadArchiveRequest(
   const fullurl = new URL(url);
 
   // Generate a random token.
-  const rand = () =>
-    Math.random()
-      .toString(36)
-      .substr(2);
+  const rand = () => Math.random().toString(36).substr(2);
   const token = (length: number) =>
     (rand() + rand() + rand() + rand()).substr(0, length);
 
@@ -99,11 +97,13 @@ function extractArchiveRequest(path: string): Promise<void> {
   url = fullurl.toString();
   const request = { method: "GET" };
 
-  return ServerConnection.makeRequest(url, request, settings).then(response => {
-    if (response.status !== 200) {
-      throw new ServerConnection.ResponseError(response);
+  return ServerConnection.makeRequest(url, request, settings).then(
+    (response) => {
+      if (response.status !== 200) {
+        throw new ServerConnection.ResponseError(response);
+      }
     }
-  });
+  );
 }
 
 /**
@@ -134,7 +134,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       ".tar.bz",
       ".tar.bz2",
       ".txz",
-      ".tar.xz"
+      ".tar.xz",
     ];
     let archiveFormat: ArchiveFormat; // Default value read from settings
     let followSymlinks: string; // Default value read from settings
@@ -151,24 +151,24 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Create submenus
     const archiveFolder = new Menu({
-      commands
+      commands,
     });
     archiveFolder.title.label = "Download As";
-    archiveFolder.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
+    archiveFolder.title.icon = archiveIcon;
     const archiveCurrentFolder = new Menu({
-      commands
+      commands,
     });
     archiveCurrentFolder.title.label = "Download Current Folder As";
-    archiveCurrentFolder.title.iconClass = "jp-MaterialIcon jp-DownloadIcon";
+    archiveCurrentFolder.title.icon = archiveIcon;
 
-    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach(format => {
+    ["zip", "tar.bz2", "tar.gz", "tar.xz"].forEach((format) => {
       archiveFolder.addItem({
         command: CommandIDs.downloadArchive,
-        args: { format }
+        args: { format },
       });
       archiveCurrentFolder.addItem({
         command: CommandIDs.downloadArchiveCurrentFolder,
-        args: { format }
+        args: { format },
       });
     });
 
@@ -193,26 +193,26 @@ const extension: JupyterFrontEndPlugin<void> = {
               selector: selectorOnlyDir,
               rank: 10,
               type: "submenu",
-              submenu: archiveFolder
+              submenu: archiveFolder,
             });
 
             archiveCurrentFolderItem = app.contextMenu.addItem({
               selector: selectorContent,
               rank: 3,
               type: "submenu",
-              submenu: archiveCurrentFolder
+              submenu: archiveCurrentFolder,
             });
           } else {
             archiveFolderItem = app.contextMenu.addItem({
               command: CommandIDs.downloadArchive,
               selector: selectorOnlyDir,
-              rank: 10
+              rank: 10,
             });
 
             archiveCurrentFolderItem = app.contextMenu.addItem({
               command: CommandIDs.downloadArchiveCurrentFolder,
               selector: selectorContent,
-              rank: 3
+              rank: 3,
             });
           }
         }
@@ -224,8 +224,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Load the settings
     settingRegistry
       .load("@hadim/jupyter-archive:archive")
-      .then(settings => {
-        settings.changed.connect(settings => {
+      .then((settings) => {
+        settings.changed.connect((settings) => {
           const newFormat = settings.get("format").composite as ArchiveFormat;
           updateFormat(newFormat, archiveFormat);
           followSymlinks = settings.get("followSymlinks").composite as string;
@@ -237,7 +237,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         followSymlinks = settings.get("followSymlinks").composite as string;
         downloadHidden = settings.get("downloadHidden").composite as string;
       })
-      .catch(reason => {
+      .catch((reason) => {
         console.error(reason);
         showErrorMessage(
           "Fail to read settings for '@hadim/jupyter-archive:archive'",
@@ -247,10 +247,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add the 'downloadArchive' command to the file's menu.
     commands.addCommand(CommandIDs.downloadArchive, {
-      execute: args => {
+      execute: (args) => {
         const widget = tracker.currentWidget;
         if (widget) {
-          each(widget.selectedItems(), item => {
+          each(widget.selectedItems(), (item) => {
             if (item.type == "directory") {
               const format = args["format"] as ArchiveFormat;
               downloadArchiveRequest(
@@ -258,20 +258,19 @@ const extension: JupyterFrontEndPlugin<void> = {
                 allowedArchiveExtensions.indexOf("." + format) >= 0
                   ? format
                   : archiveFormat,
-              followSymlinks,
-              downloadHidden
+                followSymlinks,
+                downloadHidden
               );
             }
           });
         }
       },
-      iconClass: args =>
-        "format" in args ? "" : "jp-MaterialIcon jp-DownloadIcon",
-      label: args => {
+      icon: (args) => ("format" in args ? "" : archiveIcon),
+      label: (args) => {
         const format = (args["format"] as ArchiveFormat) || "";
         const label = format.replace(".", " ").toLocaleUpperCase();
         return label ? `${label} Archive` : "Download as an Archive";
-      }
+      },
     });
 
     // Add the 'extractArchive' command to the file's menu.
@@ -279,12 +278,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
-          each(widget.selectedItems(), item => {
+          each(widget.selectedItems(), (item) => {
             extractArchiveRequest(item.path);
           });
         }
       },
-      iconClass: "jp-MaterialIcon jp-DownCaretIcon",
+      icon: unarchiveIcon,
       isVisible: () => {
         const widget = tracker.currentWidget;
         let visible = false;
@@ -294,26 +293,27 @@ const extension: JupyterFrontEndPlugin<void> = {
           const splitName = basename.split(".");
           let lastTwoParts = "";
           if (splitName.length >= 2) {
-            lastTwoParts = "." + splitName.splice(splitName.length - 2, 2).join(".");
+            lastTwoParts =
+              "." + splitName.splice(splitName.length - 2, 2).join(".");
           }
           visible =
-            allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >=
-            0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
+            allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >= 0 ||
+            allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
         }
         return visible;
       },
-      label: "Extract Archive"
+      label: "Extract Archive",
     });
 
     app.contextMenu.addItem({
       command: CommandIDs.extractArchive,
       selector: selectorNotDir,
-      rank: 10
+      rank: 10,
     });
 
     // Add the 'downloadArchiveCurrentFolder' command to file browser content.
     commands.addCommand(CommandIDs.downloadArchiveCurrentFolder, {
-      execute: args => {
+      execute: (args) => {
         const widget = tracker.currentWidget;
         if (widget) {
           const format = args["format"] as ArchiveFormat;
@@ -327,17 +327,16 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
         }
       },
-      iconClass: args =>
-        "format" in args ? "" : "jp-MaterialIcon jp-DownloadIcon",
-      label: args => {
+      icon: (args) => ("format" in args ? "" : archiveIcon),
+      label: (args) => {
         const format = (args["format"] as ArchiveFormat) || "";
         const label = format.replace(".", " ").toLocaleUpperCase();
         return label
           ? `${label} Archive`
           : "Download Current Folder as an Archive";
-      }
+      },
     });
-  }
+  },
 };
 
 export default extension;
