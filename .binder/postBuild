@@ -1,6 +1,8 @@
+#!/bin/bash
+set -e
 jlpm
-jlpm build
-jupyter labextension link .
+jlpm pack
+jupyter labextension install hadim-jupyter-archive-*.tgz
 
-pip install -e .
-jupyter serverextension enable --py jupyter_archive
+pip install .
+jupyter serverextension enable --sys-prefix --py jupyter_archive
