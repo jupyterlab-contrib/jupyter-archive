@@ -1,6 +1,6 @@
 # jupyter-archive
 
-[![Github Actions Status](https://github.com/jupyterlab-contrib/jupyter-archive.git/workflows/Build/badge.svg)](https://github.com/jupyterlab-contrib/jupyter-archive/actions?query=workflow%3ABuild)
+[![Github Actions Status](https://github.com/jupyterlab-contrib/jupyter-archive/workflows/Build/badge.svg)](https://github.com/jupyterlab-contrib/jupyter-archive/actions?query=workflow%3ABuild)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab-contrib/jupyter-archive.git/master?urlpath=lab)
 [![Version](https://img.shields.io/npm/v/@hadim/jupyter-archive.svg)](https://www.npmjs.com/package/@hadim/jupyter-archive)
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
@@ -20,13 +20,11 @@ Features:
 
 ![jupyter-archive in action](https://raw.githubusercontent.com/jupyterlab-contrib/jupyter-archive/master/archive.gif)
 
-This extension is composed of a Python package named `jupyter-archive`
-for the server extension and a NPM package named `@hadim/jupyter-archive`
-for the frontend extension.
-
 ## Requirements
 
 - JupyterLab >= 3.0
+
+For JupyterLab 2.x, have look [there](https://github.com/jupyterlab-contrib/jupyter-archive/tree/2.x).
 
 ## Install
 
