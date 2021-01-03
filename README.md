@@ -89,3 +89,12 @@ By default, the `jlpm run build` command generates the source maps for this exte
 ```bash
 jupyter lab build --minimize=False
 ```
+
+## License
+
+Under BSD license. See [LICENSE](LICENSE).
+
+## Authors
+
+- Hadrien Mary: [@hadim](https://github.com/hadim)
+- Frédéric Collonval: [@fcollonval](https://github.com/fcollonval)
