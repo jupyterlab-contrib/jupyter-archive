@@ -1,13 +1,12 @@
-import os
 import asyncio
-import zipfile
-import tarfile
+import os
 import pathlib
+import tarfile
+import zipfile
 
-from tornado import gen, web, iostream, ioloop
-from notebook.base.handlers import IPythonHandler
-from notebook.utils import url2path
-
+from jupyter_server.base.handlers import JupyterHandler
+from jupyter_server.utils import url2path, url_path_join
+from tornado import ioloop, web
 
 # The delay in ms at which we send the chunk of data
 # to the client.
@@ -79,10 +78,9 @@ def make_reader(archive_path):
     return archive_file
 
 
-class DownloadArchiveHandler(IPythonHandler):
+class DownloadArchiveHandler(JupyterHandler):
     @web.authenticated
-    @gen.coroutine
-    def get(self, archive_path, include_body=False):
+    async def get(self, archive_path, include_body=False):
 
         # /directories/ requests must originate from the same site
         self.check_xsrf_cookie()
@@ -113,9 +111,7 @@ class DownloadArchiveHandler(IPythonHandler):
         else:
             raise web.HTTPError(400)
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-
-        archive_path = pathlib.Path(archive_path)
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
         archive_name = archive_path.name
         archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
 
@@ -128,8 +124,14 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
         self.flush_cb.start()
 
-        args = (archive_path, archive_format, archive_token, follow_symlinks, download_hidden)
-        yield ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
+        args = (
+            archive_path,
+            archive_format,
+            archive_token,
+            follow_symlinks,
+            download_hidden,
+        )
+        await ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
         if self.canceled:
             self.log.info("Download canceled.")
@@ -141,7 +143,14 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb.stop()
         self.finish()
 
-    def archive_and_download(self, archive_path, archive_format, archive_token, follow_symlinks, download_hidden):
+    def archive_and_download(
+        self,
+        archive_path,
+        archive_format,
+        archive_token,
+        follow_symlinks,
+        download_hidden,
+    ):
 
         with make_writer(self, archive_format) as archive:
             prefix = len(str(archive_path.parent)) + len(os.path.sep)
@@ -149,8 +158,8 @@ class DownloadArchiveHandler(IPythonHandler):
                 # This ensures that if download_hidden is false, then the
                 # hidden files are skipped when walking the directory.
                 if not download_hidden:
-                    files = [f for f in files if not f[0] == '.']
-                    dirs[:] = [d for d in dirs if not d[0] == '.']
+                    files = [f for f in files if not f[0] == "."]
+                    dirs[:] = [d for d in dirs if not d[0] == "."]
                 for file_ in files:
                     file_name = os.path.join(root, file_)
                     if not self.canceled:
@@ -165,10 +174,9 @@ class DownloadArchiveHandler(IPythonHandler):
         self.flush_cb.stop()
 
 
-class ExtractArchiveHandler(IPythonHandler):
+class ExtractArchiveHandler(JupyterHandler):
     @web.authenticated
-    @gen.coroutine
-    def get(self, archive_path, include_body=False):
+    async def get(self, archive_path, include_body=False):
 
         # /extract-archive/ requests must originate from the same site
         self.check_xsrf_cookie()
@@ -178,10 +186,9 @@ class ExtractArchiveHandler(IPythonHandler):
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-        archive_path = pathlib.Path(archive_path)
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
 
-        yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, archive_path)
+        await ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, archive_path)
 
         self.finish()
 
@@ -195,3 +202,14 @@ class ExtractArchiveHandler(IPythonHandler):
             archive.extractall(archive_destination)
 
         self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))
+
+
+def setup_handlers(web_app):
+    host_pattern = ".*$"
+    base_url = web_app.settings["base_url"]
+
+    handlers = [
+        (url_path_join(base_url, r"/directories/(.*)"), DownloadArchiveHandler),
+        (url_path_join(base_url, r"/extract-archive/(.*)"), ExtractArchiveHandler),
+    ]
+    web_app.add_handlers(host_pattern, handlers)
