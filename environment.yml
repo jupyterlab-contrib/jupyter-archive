@@ -7,6 +7,4 @@ dependencies:
   - jupyterlab>=3.0.0,<4.0.0
   - nodejs
   - black
-  - pip:
-      - pytest-jupyter==0.0.3
-      - pytest-tornasync==0.6.0.post2
+  - pytest-tornasync==0.6.0.post2

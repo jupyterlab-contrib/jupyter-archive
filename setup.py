@@ -62,6 +62,7 @@ setup_args = dict(
     install_requires=[
         "jupyterlab>=3.0.0rc13,==3.*",
     ],
+    extra_requires={"test": ["pytest", "pytest-tornasync"]},
     zip_safe=False,
     include_package_data=True,
     python_requires=">=3.6,<4",
