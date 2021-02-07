@@ -30,6 +30,7 @@ labext_name = "@hadim/jupyter-archive"
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, str(lab_path), "**"),
     ("share/jupyter/labextensions/%s" % labext_name, str(HERE), "install.json"),
+    ("etc/jupyter/jupyter_notebook_config.d", "jupyter-config", "jupyter-archive-nb.json"),
     ("etc/jupyter/jupyter_server_config.d", "jupyter-config", "jupyter-archive.json"),
 ]
 
