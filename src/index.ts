@@ -12,7 +12,7 @@ import { IDisposable } from '@lumino/disposable';
 import { Menu } from '@lumino/widgets';
 import { archiveIcon, unarchiveIcon } from './icon';
 
-const DIRECTORIES_URL = 'directories';
+const DIRECTORIES_URL = 'directories/';
 const EXTRACT_ARCHIVE_URL = 'extract-archive';
 type ArchiveFormat =
   | null
