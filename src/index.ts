@@ -12,7 +12,7 @@ import { IDisposable } from '@lumino/disposable';
 import { Menu } from '@lumino/widgets';
 import { archiveIcon, unarchiveIcon } from './icon';
 
-const DIRECTORIES_URL = 'directories/';
+const DIRECTORIES_URL = 'directories';
 const EXTRACT_ARCHIVE_URL = 'extract-archive';
 type ArchiveFormat =
   | null
@@ -43,6 +43,10 @@ function downloadArchiveRequest(
 
   const baseUrl = settings.baseUrl;
   let url = URLExt.join(baseUrl, DIRECTORIES_URL, URLExt.encodeParts(path));
+  // Request downloading the root folder
+  if (path === '') {
+    url += '/';
+  }
 
   const fullurl = new URL(url);
 
