@@ -43,6 +43,10 @@ function downloadArchiveRequest(
 
   const baseUrl = settings.baseUrl;
   let url = URLExt.join(baseUrl, DIRECTORIES_URL, URLExt.encodeParts(path));
+  // Request downloading the root folder
+  if (path === '') {
+    url += '/';
+  }
 
   const fullurl = new URL(url);
 
