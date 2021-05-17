@@ -1,6 +1,6 @@
 {
   "name": "@hadim/jupyter-archive",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A Jupyterlab extension to make, download and extract archive files.",
   "keywords": [
     "jupyter",
@@ -12,7 +12,16 @@
     "url": "https://github.com/jupyterlab-contrib/jupyter-archive/issues"
   },
   "license": "BSD-3-Clause",
-  "author": "hadim,fcollonval",
+  "contributors": [
+    {
+      "name": "Hadrien Mary",
+      "email": "hadrien.mary@gmail.com"
+    },
+    {
+      "name": "Frederic Collonval",
+      "email": "fcollonval@gmail.com"
+    }
+  ],
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
     "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
