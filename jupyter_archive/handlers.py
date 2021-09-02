@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tarfile
+import time
 import zipfile
 
 from jupyter_server.base.handlers import JupyterHandler
@@ -10,6 +11,10 @@ from tornado import ioloop, web
 # The delay in ms at which we send the chunk of data
 # to the client.
 ARCHIVE_DOWNLOAD_FLUSH_DELAY = 100
+# 8K for one chunk 10240 * 8K equals to 80M
+HANDLER_MAX_BUFFER_LENGTH = os.environ.get("JA_HANDLER_MAX_BUFFER_LENGTH", 10240)
+IOSTREAM_MAX_BUFFER_SIZE = os.environ.get("JA_IOSTREAM_MAX_BUFFER_SIZE", 100 * 1024 * 1024)
+
 SUPPORTED_FORMAT = [
     "zip",
     "tgz",
@@ -29,6 +34,11 @@ class ArchiveStream:
         self.position = 0
 
     def write(self, data):
+        while len(self.handler._write_buffer) > HANDLER_MAX_BUFFER_LENGTH:
+            # write_buffer or handler is too large, wait for an flush cycle
+            time.sleep(ARCHIVE_DOWNLOAD_FLUSH_DELAY / 1000)
+            if self.handler.canceled:
+                return
         self.position += len(data)
         self.handler.write(data)
         del data
@@ -78,6 +88,18 @@ def make_reader(archive_path):
 
 
 class DownloadArchiveHandler(JupyterHandler):
+
+    @property
+    def stream_max_buffer_size(self):
+        # max buffer size of iostream
+        return self.settings.get('ja_stream_max_buffer_size', IOSTREAM_MAX_BUFFER_SIZE)
+
+    def flush(self, include_footers=False):
+        # skip flush when stream_buffer is larger than stream_max_buffer_size
+        if len(self.request.connection.stream._write_buffer) > self.stream_max_buffer_size:
+            return
+        return super(DownloadArchiveHandler, self).flush(include_footers)
+
     @web.authenticated
     async def get(self, archive_path, include_body=False):
 
