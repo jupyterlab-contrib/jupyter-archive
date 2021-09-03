@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tarfile
+import time
 import zipfile
 
 from jupyter_server.base.handlers import JupyterHandler
@@ -29,6 +30,13 @@ class ArchiveStream:
         self.position = 0
 
     def write(self, data):
+        if self.handler.canceled:
+            raise ValueError("File download canceled")
+        while len(self.handler._write_buffer) > self.handler.handler_max_buffer_length:
+            # write_buffer or handler is too large, wait for an flush cycle
+            time.sleep(ARCHIVE_DOWNLOAD_FLUSH_DELAY / 1000)
+            if self.handler.canceled:
+                return
         self.position += len(data)
         self.handler.write(data)
         del data
@@ -78,6 +86,22 @@ def make_reader(archive_path):
 
 
 class DownloadArchiveHandler(JupyterHandler):
+
+    @property
+    def stream_max_buffer_size(self):
+        return self.settings["jupyter_archive"].stream_max_buffer_size
+
+    @property
+    def handler_max_buffer_length(self):
+        return self.settings["jupyter_archive"].handler_max_buffer_length
+
+    def flush(self, include_footers=False):
+        # skip flush when stream_buffer is larger than stream_max_buffer_size
+        stream_buffer = self.request.connection.stream._write_buffer
+        if stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
+            return
+        return super(DownloadArchiveHandler, self).flush(include_footers)
+
     @web.authenticated
     async def get(self, archive_path, include_body=False):
 
