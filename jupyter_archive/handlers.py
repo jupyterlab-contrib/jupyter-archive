@@ -8,9 +8,6 @@ from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join
 from tornado import ioloop, web
 
-# The delay in ms at which we send the chunk of data
-# to the client.
-ARCHIVE_DOWNLOAD_FLUSH_DELAY = 100
 SUPPORTED_FORMAT = [
     "zip",
     "tgz",
@@ -32,11 +29,16 @@ class ArchiveStream:
     def write(self, data):
         if self.handler.canceled:
             raise ValueError("File download canceled")
+        # timeout 600s for this while loop
+        time_out_cnt = 600 * 1000 / self.handler.archive_download_flush_delay
         while len(self.handler._write_buffer) > self.handler.handler_max_buffer_length:
             # write_buffer or handler is too large, wait for an flush cycle
-            time.sleep(ARCHIVE_DOWNLOAD_FLUSH_DELAY / 1000)
+            time.sleep(self.handler.archive_download_flush_delay / 1000)
             if self.handler.canceled:
-                return
+                raise ValueError("File download canceled")
+            time_out_cnt -= 1
+            if time_out_cnt <= 0:
+                raise ValueError("Time out for writing into tornado buffer")
         self.position += len(data)
         self.handler.write(data)
         del data
@@ -95,6 +97,10 @@ class DownloadArchiveHandler(JupyterHandler):
     def handler_max_buffer_length(self):
         return self.settings["jupyter_archive"].handler_max_buffer_length
 
+    @property
+    def archive_download_flush_delay(self):
+        return self.settings["jupyter_archive"].archive_download_flush_delay
+
     def flush(self, include_footers=False):
         # skip flush when stream_buffer is larger than stream_max_buffer_size
         stream_buffer = self.request.connection.stream._write_buffer
@@ -144,7 +150,7 @@ class DownloadArchiveHandler(JupyterHandler):
         self.set_header("content-disposition", "attachment; filename={}".format(archive_filename))
 
         self.canceled = False
-        self.flush_cb = ioloop.PeriodicCallback(self.flush, ARCHIVE_DOWNLOAD_FLUSH_DELAY)
+        self.flush_cb = ioloop.PeriodicCallback(self.flush, self.archive_download_flush_delay)
         self.flush_cb.start()
 
         args = (
