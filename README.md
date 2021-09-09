@@ -20,6 +20,27 @@ Features:
 
 ![jupyter-archive in action](https://raw.githubusercontent.com/jupyterlab-contrib/jupyter-archive/master/archive.gif)
 
+## Configuration
+
+The server extension has some [configuration settings](https://jupyter-server.readthedocs.io/en/latest/users/configuration.html) -- 
+ the values below are the default one:
+
+```json5
+{
+  "JupyterArchive": {
+    "stream_max_buffer_size": 104857600, // The max size of tornado IOStream buffer
+    "handler_max_buffer_length": 10240, // The max length of chunks in tornado RequestHandler
+    "archive_download_flush_delay": 100 // The delay in ms at which we send the chunk of data to the client.
+  }
+}
+```
+
+You can also set new values with the following environment variables:
+
+- `JA_IOSTREAM_MAX_BUFFER_SIZE`
+- `JA_HANDLER_MAX_BUFFER_LENGTH`
+- `JA_ARCHIVE_DOWNLOAD_FLUSH_DELAY`
+
 ## Requirements
 
 - JupyterLab >= 3.0
