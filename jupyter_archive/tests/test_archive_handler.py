@@ -144,7 +144,7 @@ async def test_extract(jp_fetch, jp_root_dir, file_name, format, mode):
 
     # Make an archive
     archive_dir_path = jp_root_dir / file_name
-    archive_path = archive_dir_path.with_suffix("." + format)
+    archive_path = archive_dir_path.with_suffix(f"{archive_dir_path.suffix}.{format}")
     if format == "zip":
         with zipfile.ZipFile(archive_path, mode=mode) as writer:
             for file_path in archive_dir_path.rglob("*"):
