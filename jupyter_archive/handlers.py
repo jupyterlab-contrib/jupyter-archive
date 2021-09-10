@@ -72,15 +72,15 @@ def make_writer(handler, archive_format="zip"):
 
 def make_reader(archive_path):
 
-    archive_format = "".join(archive_path.suffixes)[1:]
+    archive_format = "".join(archive_path.suffixes)
 
-    if archive_format.endswith("zip"):
+    if archive_format.endswith(".zip"):
         archive_file = zipfile.ZipFile(archive_path, mode="r")
-    elif any([archive_format.endswith(ext) for ext in ["tgz", "tar.gz"]]):
+    elif any([archive_format.endswith(ext) for ext in [".tgz", ".tar.gz"]]):
         archive_file = tarfile.open(archive_path, mode="r|gz")
-    elif any([archive_format.endswith(ext) for ext in ["tbz", "tbz2", "tar.bz", "tar.bz2"]]):
+    elif any([archive_format.endswith(ext) for ext in [".tbz", ".tbz2", ".tar.bz", ".tar.bz2"]]):
         archive_file = tarfile.open(archive_path, mode="r|bz2")
-    elif any([archive_format.endswith(ext) for ext in ["txz", "tar.xz"]]):
+    elif any([archive_format.endswith(ext) for ext in [".txz", ".tar.xz"]]):
         archive_file = tarfile.open(archive_path, mode="r|xz")
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
