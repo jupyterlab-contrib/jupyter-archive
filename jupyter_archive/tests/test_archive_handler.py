@@ -5,6 +5,8 @@ import zipfile
 
 import pytest
 
+from tornado.httpclient import HTTPClientError
+
 
 @pytest.mark.parametrize(
     "followSymlinks, download_hidden, file_list",
@@ -165,3 +167,50 @@ async def test_extract(jp_fetch, jp_root_dir, file_name, format, mode):
 
     n_files = len(list(archive_dir_path.glob("*")))
     assert n_files == 3
+
+
+@pytest.mark.parametrize(
+    "format, mode",
+    [
+        ("zip", "w"),
+        ("tgz", "w|gz"),
+        ("tar.gz", "w|gz"),
+        ("tbz", "w|bz2"),
+        ("tbz2", "w|bz2"),
+        ("tar.bz", "w|bz2"),
+        ("tar.bz2", "w|bz2"),
+        ("txz", "w|xz"),
+        ("tar.xz", "w|xz"),
+    ],
+)
+async def test_extract_failure(jp_fetch, jp_root_dir, format, mode):
+    # Create a dummy directory.
+    archive_dir_path = jp_root_dir / "extract-archive-dir"
+    archive_dir_path.mkdir(parents=True)
+
+    (archive_dir_path / "extract-test1.txt").write_text("hello1")
+    (archive_dir_path / "extract-test2.txt").write_text("hello2")
+    (archive_dir_path / "extract-test3.md").write_text("hello3")
+
+    # Make an archive
+    archive_dir_path = jp_root_dir / "extract-archive-dir"
+    # The request should fail when the extension has an unnecessary prefix.
+    archive_path = archive_dir_path.with_suffix(f".prefix{format}")
+    if format == "zip":
+        with zipfile.ZipFile(archive_path, mode=mode) as writer:
+            for file_path in archive_dir_path.rglob("*"):
+                if file_path.is_file():
+                    writer.write(file_path, file_path.relative_to(jp_root_dir))
+    else:
+        with tarfile.open(str(archive_path), mode=mode) as writer:
+            for file_path in archive_dir_path.rglob("*"):
+                if file_path.is_file():
+                    writer.add(file_path, file_path.relative_to(jp_root_dir))
+
+    # Remove the directory
+    shutil.rmtree(archive_dir_path)
+
+    with pytest.raises(Exception) as e:
+        await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
+    assert e.type == HTTPClientError
+    assert not archive_dir_path.exists()
