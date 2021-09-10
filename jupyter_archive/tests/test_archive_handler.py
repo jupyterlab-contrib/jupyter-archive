@@ -102,7 +102,7 @@ async def test_download(jp_fetch, jp_root_dir, followSymlinks, download_hidden, 
     assert r.code == 200
     assert r.headers["content-type"] == "application/octet-stream"
     assert r.headers["cache-control"] == "no-cache"
-    
+
     if format == "zip":
         with zipfile.ZipFile(r.buffer, mode=mode) as zf:
             assert set(zf.namelist()) == file_list
@@ -111,6 +111,14 @@ async def test_download(jp_fetch, jp_root_dir, followSymlinks, download_hidden, 
             assert set(map(lambda m: m.name, tf.getmembers())) == file_list
 
 
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        ('archive'),
+        ('archive.hello'),
+        ('archive.tar.gz'),
+    ],
+)
 @pytest.mark.parametrize(
     "format, mode",
     [
@@ -125,9 +133,9 @@ async def test_download(jp_fetch, jp_root_dir, followSymlinks, download_hidden, 
         ("tar.xz", "w|xz"),
     ],
 )
-async def test_extract(jp_fetch, jp_root_dir, format, mode):
+async def test_extract(jp_fetch, jp_root_dir, file_name, format, mode):
     # Create a dummy directory.
-    archive_dir_path = jp_root_dir / "extract-archive-dir"
+    archive_dir_path = jp_root_dir / file_name
     archive_dir_path.mkdir(parents=True)
 
     (archive_dir_path / "extract-test1.txt").write_text("hello1")
@@ -135,7 +143,7 @@ async def test_extract(jp_fetch, jp_root_dir, format, mode):
     (archive_dir_path / "extract-test3.md").write_text("hello3")
 
     # Make an archive
-    archive_dir_path = jp_root_dir / "extract-archive-dir"
+    archive_dir_path = jp_root_dir / file_name
     archive_path = archive_dir_path.with_suffix("." + format)
     if format == "zip":
         with zipfile.ZipFile(archive_path, mode=mode) as writer:
