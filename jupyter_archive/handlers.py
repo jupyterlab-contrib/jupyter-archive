@@ -72,15 +72,15 @@ def make_writer(handler, archive_format="zip"):
 
 def make_reader(archive_path):
 
-    archive_format = "".join(archive_path.suffixes)[1:]
+    archive_format = "".join(archive_path.suffixes)
 
-    if archive_format == "zip":
+    if archive_format.endswith(".zip"):
         archive_file = zipfile.ZipFile(archive_path, mode="r")
-    elif archive_format in ["tgz", "tar.gz"]:
+    elif any([archive_format.endswith(ext) for ext in [".tgz", ".tar.gz"]]):
         archive_file = tarfile.open(archive_path, mode="r|gz")
-    elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
+    elif any([archive_format.endswith(ext) for ext in [".tbz", ".tbz2", ".tar.bz", ".tar.bz2"]]):
         archive_file = tarfile.open(archive_path, mode="r|bz2")
-    elif archive_format in ["txz", "tar.xz"]:
+    elif any([archive_format.endswith(ext) for ext in [".txz", ".tar.xz"]]):
         archive_file = tarfile.open(archive_path, mode="r|xz")
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
@@ -141,8 +141,7 @@ class DownloadArchiveHandler(JupyterHandler):
             raise web.HTTPError(400)
 
         archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
-        archive_name = archive_path.name
-        archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
+        archive_filename = f"{archive_path.name}.{archive_format}"
 
         self.log.info("Prepare {} for archiving and downloading.".format(archive_filename))
         self.set_header("content-type", "application/octet-stream")
