@@ -61,7 +61,8 @@
     "@jupyterlab/filebrowser": "^3.0.0",
     "@jupyterlab/services": "^6.0.0",
     "@jupyterlab/settingregistry": "^3.0.0",
-    "@jupyterlab/ui-components": "^3.0.0"
+    "@jupyterlab/ui-components": "^3.0.0",
+    "@jupyterlab/translation": "^3.0.0"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
