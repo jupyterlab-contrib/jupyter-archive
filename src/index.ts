@@ -7,6 +7,7 @@ import { URLExt, PathExt } from '@jupyterlab/coreutils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ServerConnection } from '@jupyterlab/services';
+import {ITranslator} from '@jupyterlab/translation';
 import { each } from '@lumino/algorithm';
 import { IDisposable } from '@lumino/disposable';
 import { Menu } from '@lumino/widgets';
@@ -118,14 +119,16 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: '@hadim/jupyter-archive:archive',
   autoStart: true,
 
-  requires: [IFileBrowserFactory, ISettingRegistry],
+  requires: [IFileBrowserFactory, ISettingRegistry, ITranslator],
 
   activate: (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    translator: ITranslator
   ) => {
-    console.log('JupyterLab extension jupyter-archive is activated!');
+    const _trans = translator.load("jupyter_archive")
+    console.log(_trans.__('JupyterLab extension jupyter-archive is activated!'));
 
     const { commands } = app;
     const { tracker } = factory;
@@ -158,12 +161,12 @@ const extension: JupyterFrontEndPlugin<void> = {
     const archiveFolder = new Menu({
       commands
     });
-    archiveFolder.title.label = 'Download As';
+    archiveFolder.title.label = _trans.__('Download As');
     archiveFolder.title.icon = archiveIcon;
     const archiveCurrentFolder = new Menu({
       commands
     });
-    archiveCurrentFolder.title.label = 'Download Current Folder As';
+    archiveCurrentFolder.title.label = _trans.__('Download Current Folder As');
     archiveCurrentFolder.title.icon = archiveIcon;
 
     ['zip', 'tar.bz2', 'tar.gz', 'tar.xz'].forEach(format => {
@@ -277,7 +280,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       label: args => {
         const format = (args['format'] as ArchiveFormat) || '';
         const label = format.replace('.', ' ').toLocaleUpperCase();
-        return label ? `${label} Archive` : 'Download as an Archive';
+        return label ? `${label} Archive` : _trans.__('Download as an Archive');
       }
     });
 
@@ -310,7 +313,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
         return visible;
       },
-      label: 'Extract Archive'
+      label: _trans.__('Extract Archive')
     });
 
     app.contextMenu.addItem({
@@ -341,7 +344,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const label = format.replace('.', ' ').toLocaleUpperCase();
         return label
           ? `${label} Archive`
-          : 'Download Current Folder as an Archive';
+          : _trans.__('Download Current Folder as an Archive');
       }
     });
   }
