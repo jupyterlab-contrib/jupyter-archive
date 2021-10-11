@@ -7,6 +7,7 @@ import zipfile
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join
 from tornado import ioloop, web
+from urllib.parse import quote
 
 SUPPORTED_FORMAT = [
     "zip",
@@ -142,6 +143,7 @@ class DownloadArchiveHandler(JupyterHandler):
 
         archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
         archive_filename = f"{archive_path.name}.{archive_format}"
+        archive_filename = quote(archive_filename)
 
         self.log.info("Prepare {} for archiving and downloading.".format(archive_filename))
         self.set_header("content-type", "application/octet-stream")

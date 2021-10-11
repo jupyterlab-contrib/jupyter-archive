@@ -18,6 +18,7 @@ from tornado.httpclient import HTTPClientError
                 "download-archive-dir/test2.txt",
                 "download-archive-dir/test1.txt",
                 "download-archive-dir/test3.md",
+                "download-archive-dir/中文文件夹/中文.txt",
             },
         ),
         (
@@ -27,6 +28,7 @@ from tornado.httpclient import HTTPClientError
                 "download-archive-dir/test2.txt",
                 "download-archive-dir/test1.txt",
                 "download-archive-dir/test3.md",
+                "download-archive-dir/中文文件夹/中文.txt",
                 "download-archive-dir/.test4.md",
                 "download-archive-dir/.test-hidden-folder/test5.md",
             },
@@ -38,6 +40,7 @@ from tornado.httpclient import HTTPClientError
                 "download-archive-dir/test2.txt",
                 "download-archive-dir/test1.txt",
                 "download-archive-dir/test3.md",
+                "download-archive-dir/中文文件夹/中文.txt",
                 "download-archive-dir/symlink-test-dir/test6.md",
             },
         ),
@@ -48,6 +51,7 @@ from tornado.httpclient import HTTPClientError
                 "download-archive-dir/test2.txt",
                 "download-archive-dir/test1.txt",
                 "download-archive-dir/test3.md",
+                "download-archive-dir/中文文件夹/中文.txt",
                 "download-archive-dir/.test4.md",
                 "download-archive-dir/.test-hidden-folder/test5.md",
                 "download-archive-dir/symlink-test-dir/test6.md",
@@ -84,6 +88,10 @@ async def test_download(jp_fetch, jp_root_dir, followSymlinks, download_hidden, 
     hidden_folder = archive_dir_path / ".test-hidden-folder"
     hidden_folder.mkdir(parents=True)
     (hidden_folder / "test5.md").write_text("hello5")
+
+    non_ascii_folder = archive_dir_path / "中文文件夹"
+    non_ascii_folder.mkdir(parents=True)
+    (non_ascii_folder / "中文.txt").write_text("你好")
 
     symlink_dir_path = jp_root_dir / "symlink-archive-dir"
     symlink_dir_path.mkdir(parents=True)
