@@ -223,15 +223,30 @@ class ExtractArchiveHandler(JupyterHandler):
         self.finish()
 
     def extract_archive(self, archive_path):
+        def unzip(reader, destination):
+            # OSX Compress missing flag, broke zipFile
+            # so here we guess it
+            with reader as f:
+                for fn in f.namelist():
+                    extreact_path = pathlib.Path(f.extract(fn, path=destination))
+                    try:
+                        correct_filename = fn.encode('cp437').decode('utf-8')
+                    except UnicodeEncodeError:
+                        correct_filename = fn
+                    extreact_path.rename(os.path.join(destination, correct_filename))
 
         archive_destination = archive_path.parent
         self.log.info("Begin extraction of {} to {}.".format(archive_path, archive_destination))
 
         archive_reader = make_reader(archive_path)
-        with archive_reader as archive:
-            archive.extractall(archive_destination)
+        if isinstance(archive_reader, zipfile.ZipFile):
+            unzip(archive_reader, archive_destination)
+        else:
+            with archive_reader as archive:
+                archive.extractall(archive_destination)
 
         self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))
+
 
 
 def setup_handlers(web_app):
