@@ -223,16 +223,26 @@ class ExtractArchiveHandler(JupyterHandler):
         self.finish()
 
     def extract_archive(self, archive_path):
+        def try_macos_decode(fn):
+            try:
+                return fn.encode('cp437').decode('utf-8')
+            except UnicodeError:
+                return None
+
+        def try_windows_chinese_decode(fn):
+            try:
+                return fn.encode('cp437').decode('gbk')
+            except UnicodeError:
+                return None
+
         def unzip(reader, destination):
-            # OSX Compress missing flag, broke zipFile
-            # so here we guess it
+            # most of Windows implementations use DOS (OEM) encoding
+            # Mac OS zip utility uses utf-8, but it doesn't set utf-8 bit flags
+            # *nix zip utilities silently uses system encoding(utf-8 generally)
             with reader as f:
                 for fn in f.namelist():
                     extreact_path = pathlib.Path(f.extract(fn, path=destination))
-                    try:
-                        correct_filename = fn.encode('cp437').decode('utf-8')
-                    except UnicodeEncodeError:
-                        correct_filename = fn
+                    correct_filename = try_macos_decode(fn) or try_windows_chinese_decode(fn) or fn
                     extreact_path.rename(os.path.join(destination, correct_filename))
 
         archive_destination = archive_path.parent
