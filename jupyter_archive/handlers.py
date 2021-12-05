@@ -1,13 +1,14 @@
 import os
 import asyncio
+import time
 import zipfile
 import tarfile
 import pathlib
+from urllib.parse import quote
 
 from tornado import gen, web, iostream, ioloop
 from notebook.base.handlers import IPythonHandler
 from notebook.utils import url2path
-
 
 # The delay in ms at which we send the chunk of data
 # to the client.
@@ -31,6 +32,18 @@ class ArchiveStream:
         self.position = 0
 
     def write(self, data):
+        if self.handler.canceled:
+            raise ValueError("File download canceled")
+        # timeout 600s for this while loop
+        time_out_cnt = 600 * 1000 / self.handler.archive_download_flush_delay
+        while len(self.handler._write_buffer) > self.handler.handler_max_buffer_length:
+            # write_buffer or handler is too large, wait for an flush cycle
+            time.sleep(self.handler.archive_download_flush_delay / 1000)
+            if self.handler.canceled:
+                raise ValueError("File download canceled")
+            time_out_cnt -= 1
+            if time_out_cnt <= 0:
+                raise ValueError("Time out for writing into tornado buffer")
         self.position += len(data)
         self.handler.write(data)
         del data
@@ -63,16 +76,15 @@ def make_writer(handler, archive_format="zip"):
 
 
 def make_reader(archive_path):
+    archive_format = "".join(archive_path.suffixes)
 
-    archive_format = "".join(archive_path.suffixes)[1:]
-
-    if archive_format == "zip":
+    if archive_format.endswith(".zip"):
         archive_file = zipfile.ZipFile(archive_path, mode="r")
-    elif archive_format in ["tgz", "tar.gz"]:
+    elif any([archive_format.endswith(ext) for ext in [".tgz", ".tar.gz"]]):
         archive_file = tarfile.open(archive_path, mode="r|gz")
-    elif archive_format in ["tbz", "tbz2", "tar.bz", "tar.bz2"]:
+    elif any([archive_format.endswith(ext) for ext in [".tbz", ".tbz2", ".tar.bz", ".tar.bz2"]]):
         archive_file = tarfile.open(archive_path, mode="r|bz2")
-    elif archive_format in ["txz", "tar.xz"]:
+    elif any([archive_format.endswith(ext) for ext in [".txz", ".tar.xz"]]):
         archive_file = tarfile.open(archive_path, mode="r|xz")
     else:
         raise ValueError("'{}' is not a valid archive format.".format(archive_format))
@@ -80,6 +92,25 @@ def make_reader(archive_path):
 
 
 class DownloadArchiveHandler(IPythonHandler):
+    @property
+    def stream_max_buffer_size(self):
+        return self.settings["jupyter_archive"].stream_max_buffer_size
+
+    @property
+    def handler_max_buffer_length(self):
+        return self.settings["jupyter_archive"].handler_max_buffer_length
+
+    @property
+    def archive_download_flush_delay(self):
+        return self.settings["jupyter_archive"].archive_download_flush_delay
+
+    def flush(self, include_footers=False):
+        # skip flush when stream_buffer is larger than stream_max_buffer_size
+        stream_buffer = self.request.connection.stream._write_buffer
+        if stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
+            return
+        return super(DownloadArchiveHandler, self).flush(include_footers)
+
     @web.authenticated
     @gen.coroutine
     def get(self, archive_path, include_body=False):
@@ -113,11 +144,9 @@ class DownloadArchiveHandler(IPythonHandler):
         else:
             raise web.HTTPError(400)
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-
-        archive_path = pathlib.Path(archive_path)
-        archive_name = archive_path.name
-        archive_filename = archive_path.with_suffix(".{}".format(archive_format)).name
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
+        archive_filename = f"{archive_path.name}.{archive_format}"
+        archive_filename = quote(archive_filename)
 
         self.log.info("Prepare {} for archiving and downloading.".format(archive_filename))
         self.set_header("content-type", "application/octet-stream")
@@ -169,7 +198,6 @@ class ExtractArchiveHandler(IPythonHandler):
     @web.authenticated
     @gen.coroutine
     def get(self, archive_path, include_body=False):
-
         # /extract-archive/ requests must originate from the same site
         self.check_xsrf_cookie()
         cm = self.contents_manager
@@ -178,15 +206,13 @@ class ExtractArchiveHandler(IPythonHandler):
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
-        archive_path = os.path.join(cm.root_dir, url2path(archive_path))
-        archive_path = pathlib.Path(archive_path)
+        archive_path = pathlib.Path(cm.root_dir) / url2path(archive_path)
 
         yield ioloop.IOLoop.current().run_in_executor(None, self.extract_archive, archive_path)
 
         self.finish()
 
     def extract_archive(self, archive_path):
-
         archive_destination = archive_path.parent
         self.log.info("Begin extraction of {} to {}.".format(archive_path, archive_destination))
 
