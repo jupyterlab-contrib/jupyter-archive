@@ -8,16 +8,12 @@ from setupbase import (
     ensure_targets,
     find_packages,
     combine_commands,
-    ensure_python,
     get_version,
     HERE,
 )
 
 # The name of the project
 name = "jupyter_archive"
-
-# Ensure a valid python version
-ensure_python(">=3.5")
 
 # Get our version
 version = get_version(pjoin(name, "_version.py"))
