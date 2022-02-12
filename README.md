@@ -89,6 +89,8 @@ The `jlpm` command is JupyterLab's pinned version of
 pip install -e .
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
+# Server extension must be manually installed in develop mode
+jupyter server extension enable jupyter_archive
 # Rebuild extension Typescript source after making changes
 jlpm run build
 ```
