@@ -102,10 +102,10 @@ class DownloadArchiveHandler(JupyterHandler):
     def archive_download_flush_delay(self):
         return self.settings["jupyter_archive"].archive_download_flush_delay
 
-    def flush(self, include_footers=False):
+    def flush(self, include_footers=False, force=False):
         # skip flush when stream_buffer is larger than stream_max_buffer_size
         stream_buffer = self.request.connection.stream._write_buffer
-        if stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
+        if not force and stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
             return
         return super(DownloadArchiveHandler, self).flush(include_footers)
 
@@ -166,7 +166,8 @@ class DownloadArchiveHandler(JupyterHandler):
         if self.canceled:
             self.log.info("Download canceled.")
         else:
-            self.flush()
+            # Here, we need to flush forcibly to move all data from _write_buffer to stream._write_buffer
+            self.flush(force=True)
             self.log.info("Finished downloading {}.".format(archive_filename))
 
         self.set_cookie("archiveToken", archive_token)
