@@ -154,24 +154,28 @@ class DownloadArchiveHandler(JupyterHandler):
         self.flush_cb = ioloop.PeriodicCallback(self.flush, self.archive_download_flush_delay)
         self.flush_cb.start()
 
-        args = (
-            archive_path,
-            archive_format,
-            archive_token,
-            follow_symlinks,
-            download_hidden,
-        )
-        await ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
+        try:
+            args = (
+                archive_path,
+                archive_format,
+                archive_token,
+                follow_symlinks,
+                download_hidden,
+            )
+            await ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
-        if self.canceled:
-            self.log.info("Download canceled.")
-        else:
-            # Here, we need to flush forcibly to move all data from _write_buffer to stream._write_buffer
-            self.flush(force=True)
-            self.log.info("Finished downloading {}.".format(archive_filename))
+            if self.canceled:
+                self.log.info("Download canceled.")
+            else:
+                # Here, we need to flush forcibly to move all data from _write_buffer to stream._write_buffer
+                self.flush(force=True)
+                self.log.info("Finished downloading {}.".format(archive_filename))
+        except Exception:
+            raise
+        finally:
+            self.flush_cb.stop()
 
         self.set_cookie("archiveToken", archive_token)
-        self.flush_cb.stop()
         self.finish()
 
     def archive_and_download(
