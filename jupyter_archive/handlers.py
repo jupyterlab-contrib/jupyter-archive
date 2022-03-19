@@ -3,6 +3,7 @@ import pathlib
 import tarfile
 import time
 import zipfile
+import threading
 
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join
@@ -41,7 +42,8 @@ class ArchiveStream:
             if time_out_cnt <= 0:
                 raise ValueError("Time out for writing into tornado buffer")
         self.position += len(data)
-        self.handler.write(data)
+        with self.handler.lock:
+            self.handler.write(data)
         del data
 
     def tell(self):
@@ -89,6 +91,7 @@ def make_reader(archive_path):
 
 
 class DownloadArchiveHandler(JupyterHandler):
+    lock = threading.Lock()
 
     @property
     def stream_max_buffer_size(self):
@@ -107,7 +110,8 @@ class DownloadArchiveHandler(JupyterHandler):
         stream_buffer = self.request.connection.stream._write_buffer
         if not force and stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
             return
-        return super(DownloadArchiveHandler, self).flush(include_footers)
+        with self.lock:
+            return super(DownloadArchiveHandler, self).flush(include_footers)
 
     @web.authenticated
     async def get(self, archive_path, include_body=False):
