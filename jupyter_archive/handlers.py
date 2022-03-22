@@ -3,6 +3,7 @@ import pathlib
 import tarfile
 import time
 import zipfile
+import threading
 
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join
@@ -41,7 +42,8 @@ class ArchiveStream:
             if time_out_cnt <= 0:
                 raise ValueError("Time out for writing into tornado buffer")
         self.position += len(data)
-        self.handler.write(data)
+        with self.handler.lock:
+            self.handler.write(data)
         del data
 
     def tell(self):
@@ -89,6 +91,7 @@ def make_reader(archive_path):
 
 
 class DownloadArchiveHandler(JupyterHandler):
+    lock = threading.Lock()
 
     @property
     def stream_max_buffer_size(self):
@@ -107,7 +110,8 @@ class DownloadArchiveHandler(JupyterHandler):
         stream_buffer = self.request.connection.stream._write_buffer
         if not force and stream_buffer and len(stream_buffer) > self.stream_max_buffer_size:
             return
-        return super(DownloadArchiveHandler, self).flush(include_footers)
+        with self.lock:
+            return super(DownloadArchiveHandler, self).flush(include_footers)
 
     @web.authenticated
     async def get(self, archive_path, include_body=False):
@@ -154,24 +158,28 @@ class DownloadArchiveHandler(JupyterHandler):
         self.flush_cb = ioloop.PeriodicCallback(self.flush, self.archive_download_flush_delay)
         self.flush_cb.start()
 
-        args = (
-            archive_path,
-            archive_format,
-            archive_token,
-            follow_symlinks,
-            download_hidden,
-        )
-        await ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
+        try:
+            args = (
+                archive_path,
+                archive_format,
+                archive_token,
+                follow_symlinks,
+                download_hidden,
+            )
+            await ioloop.IOLoop.current().run_in_executor(None, self.archive_and_download, *args)
 
-        if self.canceled:
-            self.log.info("Download canceled.")
-        else:
-            # Here, we need to flush forcibly to move all data from _write_buffer to stream._write_buffer
-            self.flush(force=True)
-            self.log.info("Finished downloading {}.".format(archive_filename))
+            if self.canceled:
+                self.log.info("Download canceled.")
+            else:
+                # Here, we need to flush forcibly to move all data from _write_buffer to stream._write_buffer
+                self.flush(force=True)
+                self.log.info("Finished downloading {}.".format(archive_filename))
+        except Exception:
+            raise
+        finally:
+            self.flush_cb.stop()
 
         self.set_cookie("archiveToken", archive_token)
-        self.flush_cb.stop()
         self.finish()
 
     def archive_and_download(
