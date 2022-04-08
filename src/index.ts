@@ -304,16 +304,18 @@ const extension: JupyterFrontEndPlugin<void> = {
         let visible = false;
         if (widget) {
           const firstItem = widget.selectedItems().next();
-          const basename = PathExt.basename(firstItem.path);
-          const splitName = basename.split('.');
-          let lastTwoParts = '';
-          if (splitName.length >= 2) {
-            lastTwoParts =
-              '.' + splitName.splice(splitName.length - 2, 2).join('.');
+          if (firstItem) {
+            const basename = PathExt.basename(firstItem.path);
+            const splitName = basename.split('.');
+            let lastTwoParts = '';
+            if (splitName.length >= 2) {
+              lastTwoParts =
+                '.' + splitName.splice(splitName.length - 2, 2).join('.');
+            }
+            visible =
+              allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >= 0 ||
+              allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
           }
-          visible =
-            allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >= 0 ||
-            allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
         }
         return visible;
       },
