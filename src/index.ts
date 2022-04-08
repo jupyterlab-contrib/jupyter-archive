@@ -313,8 +313,8 @@ const extension: JupyterFrontEndPlugin<void> = {
                 '.' + splitName.splice(splitName.length - 2, 2).join('.');
             }
             visible =
-              allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >= 0 ||
-              allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
+              allowedArchiveExtensions.indexOf(PathExt.extname(basename)) >=
+                0 || allowedArchiveExtensions.indexOf(lastTwoParts) >= 0;
           }
         }
         return visible;
