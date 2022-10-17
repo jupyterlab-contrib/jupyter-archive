@@ -207,3 +207,16 @@ async def test_extract_failure(jp_fetch, jp_root_dir, format, mode):
         await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
     assert e.type == HTTPClientError
     assert not archive_dir_path.exists()
+
+
+async def test_extract_path_traversal(jp_fetch, jp_root_dir):
+    unsafe_file_path = jp_root_dir / "test"
+    archive_path = jp_root_dir / "test.tar.gz"
+    open(unsafe_file_path, 'a').close()
+    with tarfile.open(archive_path, "w:gz") as tf:
+        tf.add(unsafe_file_path, "../../../../../../../../../../tmp/test")
+
+    with pytest.raises(Exception) as e:
+        await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
+    assert e.type == HTTPClientError
+    assert e.value.code == 400
