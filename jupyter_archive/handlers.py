@@ -229,6 +229,18 @@ class ExtractArchiveHandler(JupyterHandler):
         self.log.info("Begin extraction of {} to {}.".format(archive_path, archive_destination))
 
         archive_reader = make_reader(archive_path)
+
+        if isinstance(archive_reader, tarfile.TarFile):
+            # Check file path to avoid path traversal
+            # See https://nvd.nist.gov/vuln/detail/CVE-2007-4559
+            with archive_reader as archive:
+                for name in archive_reader.getnames():
+                    if not str((archive_destination / name).resolve()).startswith(str(archive_destination)):
+                        self.log.error(f"The archive file includes an unsafe file: {name}")
+                        raise web.HTTPError(400)
+            # Re-open stream
+            archive_reader = make_reader(archive_path)
+
         with archive_reader as archive:
             archive.extractall(archive_destination)
 
