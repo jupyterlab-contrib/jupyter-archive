@@ -107,9 +107,10 @@ function extractArchiveRequest(path: string): Promise<void> {
 
   return ServerConnection.makeRequest(url, request, settings).then(response => {
     if (response.status !== 200) {
-      const error = new ServerConnection.ResponseError(response);
-      showErrorMessage('Fail to extract the archive file', error);
-      throw error;
+      response.json().then(data => {
+        showErrorMessage('Fail to extract the archive file', data.reason);
+        throw new ServerConnection.ResponseError(response);
+      });
     }
   });
 }

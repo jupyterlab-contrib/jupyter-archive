@@ -5,7 +5,7 @@ import time
 import zipfile
 import threading
 
-from jupyter_server.base.handlers import JupyterHandler
+from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url2path, url_path_join
 from tornado import ioloop, web
 from urllib.parse import quote
@@ -213,7 +213,7 @@ class DownloadArchiveHandler(JupyterHandler):
         self.flush_cb.stop()
 
 
-class ExtractArchiveHandler(JupyterHandler):
+class ExtractArchiveHandler(APIHandler):
     @web.authenticated
     async def get(self, archive_path, include_body=False):
 
@@ -244,8 +244,9 @@ class ExtractArchiveHandler(JupyterHandler):
             with archive_reader as archive:
                 for name in archive_reader.getnames():
                     if os.path.relpath(archive_destination / name, archive_destination).startswith(os.pardir):
-                        self.log.error(f"The archive file includes an unsafe file: {name}")
-                        raise web.HTTPError(400)
+                        error_message = f"The archive file includes an unsafe file path: {name}"
+                        self.log.error(error_message)
+                        raise web.HTTPError(400, reason=error_message)
             # Re-open stream
             archive_reader = make_reader(archive_path)
 
