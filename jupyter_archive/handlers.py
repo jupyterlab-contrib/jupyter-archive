@@ -235,7 +235,7 @@ class ExtractArchiveHandler(JupyterHandler):
             # See https://nvd.nist.gov/vuln/detail/CVE-2007-4559
             with archive_reader as archive:
                 for name in archive_reader.getnames():
-                    if os.path.relpath(archive_destination / name, archive_destination).startswith("../"):
+                    if os.path.relpath(archive_destination / name, archive_destination).startswith(os.pardir):
                         self.log.error(f"The archive file includes an unsafe file: {name}")
                         raise web.HTTPError(400)
             # Re-open stream
