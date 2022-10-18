@@ -209,12 +209,19 @@ async def test_extract_failure(jp_fetch, jp_root_dir, format, mode):
     assert not archive_dir_path.exists()
 
 
-async def test_extract_path_traversal(jp_fetch, jp_root_dir):
+@pytest.mark.parametrize(
+    "file_path",
+    [
+        ("../../../../../../../../../../tmp/test"),
+        ("../test"),
+    ],
+)
+async def test_extract_path_traversal(jp_fetch, jp_root_dir, file_path):
     unsafe_file_path = jp_root_dir / "test"
     archive_path = jp_root_dir / "test.tar.gz"
     open(unsafe_file_path, 'a').close()
     with tarfile.open(archive_path, "w:gz") as tf:
-        tf.add(unsafe_file_path, "../../../../../../../../../../tmp/test")
+        tf.add(unsafe_file_path, file_path)
 
     with pytest.raises(Exception) as e:
         await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
