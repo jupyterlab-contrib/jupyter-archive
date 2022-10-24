@@ -1,11 +1,14 @@
+import json
 import os
 import pathlib
 import tarfile
 import time
+import traceback
 import zipfile
 import threading
+from http.client import responses
 
-from jupyter_server.base.handlers import JupyterHandler, APIHandler
+from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join
 from tornado import ioloop, web
 from urllib.parse import quote
@@ -213,7 +216,7 @@ class DownloadArchiveHandler(JupyterHandler):
         self.flush_cb.stop()
 
 
-class ExtractArchiveHandler(APIHandler):
+class ExtractArchiveHandler(JupyterHandler):
     @web.authenticated
     async def get(self, archive_path, include_body=False):
 
@@ -254,6 +257,26 @@ class ExtractArchiveHandler(APIHandler):
             archive.extractall(archive_destination)
 
         self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))
+
+    def write_error(self, status_code, **kwargs):
+        # Return error response as JSON
+        # See https://github.com/pyenv/pyenv/blob/ff9d3ca69ef5006352cadc31e57f51aca42705a6/versions/3.8.12/lib/python3.8/site-packages/jupyter_server/base/handlers.py#L610
+        self.set_header("Content-Type", "application/json")
+        message = responses.get(status_code, "Unknown HTTP Error")
+        reply = {
+            "message": message,
+        }
+        exc_info = kwargs.get("exc_info")
+        if exc_info:
+            e = exc_info[1]
+            if isinstance(e, web.HTTPError):
+                reply["message"] = e.log_message or message
+                reply["reason"] = e.reason
+            else:
+                reply["message"] = "Unhandled error"
+                reply["reason"] = None
+                reply["traceback"] = "".join(traceback.format_exception(*exc_info))
+        self.finish(json.dumps(reply))
 
 
 def setup_handlers(web_app):
