@@ -9,7 +9,7 @@ import threading
 from http.client import responses
 
 from jupyter_server.base.handlers import JupyterHandler
-from jupyter_server.utils import url2path, url_path_join
+from jupyter_server.utils import url2path, url_path_join, ensure_async
 from tornado import ioloop, web
 from urllib.parse import quote
 
@@ -123,7 +123,7 @@ class DownloadArchiveHandler(JupyterHandler):
         self.check_xsrf_cookie()
         cm = self.contents_manager
 
-        if cm.is_hidden(archive_path) and not cm.allow_hidden:
+        if await ensure_async(cm.is_hidden(archive_path)) and not cm.allow_hidden:
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
