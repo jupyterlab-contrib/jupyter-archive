@@ -27,7 +27,7 @@ jobs:
       run: |
         jlpm
         jlpm run eslint:check
-        python -m pip install .
+        python -m pip install .[test]
         pytest jupyter_archive
 
         jupyter server extension list 2>&1 | grep -ie "jupyter_archive.*OK"
