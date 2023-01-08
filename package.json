@@ -1,6 +1,6 @@
 {
   "name": "@hadim/jupyter-archive",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "description": "A Jupyterlab extension to make, download and extract archive files.",
   "keywords": [
     "jupyter",
