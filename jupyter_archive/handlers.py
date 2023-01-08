@@ -224,7 +224,7 @@ class ExtractArchiveHandler(JupyterHandler):
         self.check_xsrf_cookie()
         cm = self.contents_manager
 
-        if cm.is_hidden(archive_path) and not cm.allow_hidden:
+        if await ensure_async(cm.is_hidden(archive_path)) and not cm.allow_hidden:
             self.log.info("Refusing to serve hidden file, via 404 Error")
             raise web.HTTPError(404)
 
