@@ -39,7 +39,7 @@ function downloadArchiveRequest(
   archiveFormat: ArchiveFormat,
   followSymlinks: string,
   downloadHidden: string
-): Promise<void> {
+): void {
   const settings = ServerConnection.makeSettings();
 
   const baseUrl = settings.baseUrl;
@@ -55,12 +55,12 @@ function downloadArchiveRequest(
   const rand = (): string =>
     Math.random()
       .toString(36)
-      .substr(2);
+      .slice(2);
   const token = (length: number): string =>
-    (rand() + rand() + rand() + rand()).substr(0, length);
+    (rand() + rand() + rand() + rand()).slice(0, length);
 
   fullurl.searchParams.append('archiveToken', token(20));
-  fullurl.searchParams.append('archiveFormat', archiveFormat);
+  fullurl.searchParams.append('archiveFormat', archiveFormat!);
   fullurl.searchParams.append('followSymlinks', followSymlinks);
   fullurl.searchParams.append('downloadHidden', downloadHidden);
 
@@ -85,11 +85,9 @@ function downloadArchiveRequest(
     element.click();
     document.body.removeChild(element);
   }
-
-  return void 0;
 }
 
-function extractArchiveRequest(path: string): Promise<void> {
+async function extractArchiveRequest(path: string): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
   const baseUrl = settings.baseUrl;
@@ -105,14 +103,12 @@ function extractArchiveRequest(path: string): Promise<void> {
   url = fullurl.toString();
   const request = { method: 'GET' };
 
-  return ServerConnection.makeRequest(url, request, settings).then(response => {
-    if (response.status !== 200) {
-      response.json().then(data => {
-        showErrorMessage('Fail to extract the archive file', data.reason);
-        throw new ServerConnection.ResponseError(response);
-      });
-    }
-  });
+  const response = await ServerConnection.makeRequest(url, request, settings);
+  if (response.status !== 200) {
+    const data = await response.json();
+    showErrorMessage('Fail to extract the archive file', data.reason);
+    throw new ServerConnection.ResponseError(response);
+  }
 }
 
 /**
