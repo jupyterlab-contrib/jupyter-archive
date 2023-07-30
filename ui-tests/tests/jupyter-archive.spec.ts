@@ -1,21 +1,74 @@
-import { expect, test } from '@jupyterlab/galata';
+import { expect, galata, test } from '@jupyterlab/galata';
+import * as path from 'path';
 
-/**
- * Don't load JupyterLab webpage before running the tests.
- * This is required to ensure we capture all log messages.
- */
-test.use({ autoGoto: false });
+const fileName = 'folder.tar.xz';
 
-test('should emit an activation console message', async ({ page }) => {
-  const logs: string[] = [];
-
-  page.on('console', message => {
-    logs.push(message.text());
+test('should download a folder as an archive', async ({ page }) => {
+  await page.locator('.jp-DirListing-content').click({
+    button: 'right'
+  });
+  await page.getByText('New Folder').click();
+  await page.keyboard.press('Enter');
+  await page.getByRole('listitem', { name: 'Untitled Folder' }).click({
+    button: 'right'
   });
 
-  await page.goto();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByText('Download as an Archive').click();
+  const download = await downloadPromise;
+  expect(await download.path()).toBeDefined();
+});
 
-  expect(
-    logs.filter(s => s === 'JupyterLab extension @hadim/jupyter-archive is activated!')
-  ).toHaveLength(1);
+test('should download the current folder as an archive', async ({ page }) => {
+  await page.locator('.jp-DirListing-content').click({
+    button: 'right'
+  });
+  await page.getByText('New Folder').click();
+  await page.keyboard.press('Enter');
+  await page.getByRole('listitem', { name: 'Untitled Folder' }).click({
+    button: 'right'
+  });
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByText('Download Current Folder as an Archive').click();
+  const download = await downloadPromise;
+
+  expect(await download.path()).toBeDefined();
+});
+
+test('should extract an archive', async ({ page, tmpPath }) => {
+  const contents = galata.newContentsHelper(page.request);
+  await contents.uploadFile(
+    path.resolve(__dirname, `./data/${fileName}`),
+    `${tmpPath}/${fileName}`
+  );
+
+  await page.getByRole('listitem', { name: 'folder.tar.xz' }).click({
+    button: 'right'
+  });
+  await page.getByText('Extract Archive').click();
+  await page.getByText('folder', { exact: true }).click();
+});
+
+test.describe('submenu', () => {
+  test.use({
+    mockSettings: {
+      '@hadim/jupyter-archive:archive': {
+        format: ''
+      }
+    }
+  });
+
+  test('should pick folder archive type from submenu', async ({ page }) => {
+    await page.locator('.jp-DirListing-content').click({
+      button: 'right'
+    });
+    await page.getByText('New Folder').click();
+    await page.keyboard.press('Enter');
+    await page.getByRole('listitem', { name: 'Untitled Folder' }).click({
+      button: 'right'
+    });
+
+    await page.getByText('Download As').click();
+    await expect(page.getByText('Archive')).toHaveCount(4);
+  });
 });

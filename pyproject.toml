@@ -45,25 +45,25 @@ source = "nodejs"
 fields = ["description", "authors", "urls"]
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["jupyter-archive/labextension"]
+artifacts = ["jupyter_archive/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyter-archive/labextension" = "share/jupyter/labextensions/@hadim/jupyter-archive"
+"jupyter_archive/labextension" = "share/jupyter/labextensions/@hadim/jupyter-archive"
 "install.json" = "share/jupyter/labextensions/@hadim/jupyter-archive/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 
 [tool.hatch.build.hooks.version]
-path = "jupyter-archive/_version.py"
+path = "jupyter_archive/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "jupyter-archive/labextension/static/style.js",
-    "jupyter-archive/labextension/package.json",
+    "jupyter_archive/labextension/static/style.js",
+    "jupyter_archive/labextension/package.json",
 ]
-skip-if-exists = ["jupyter-archive/labextension/static/style.js"]
+skip-if-exists = ["jupyter_archive/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
@@ -73,7 +73,7 @@ npm = ["jlpm"]
 build_cmd = "install:extension"
 npm = ["jlpm"]
 source_dir = "src"
-build_dir = "jupyter-archive/labextension"
+build_dir = "jupyter_archive/labextension"
 
 [tool.jupyter-releaser.options]
 version_cmd = "hatch version"

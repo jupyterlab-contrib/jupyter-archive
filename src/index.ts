@@ -16,7 +16,7 @@ import { archiveIcon, unarchiveIcon } from './icon';
 const DIRECTORIES_URL = 'directories';
 const EXTRACT_ARCHIVE_URL = 'extract-archive';
 type ArchiveFormat =
-  | null
+  | ''
   | 'zip'
   | 'tgz'
   | 'tar.gz'
@@ -60,7 +60,7 @@ function downloadArchiveRequest(
     (rand() + rand() + rand() + rand()).slice(0, length);
 
   fullurl.searchParams.append('archiveToken', token(20));
-  fullurl.searchParams.append('archiveFormat', archiveFormat!);
+  fullurl.searchParams.append('archiveFormat', archiveFormat);
   fullurl.searchParams.append('followSymlinks', followSymlinks);
   fullurl.searchParams.append('downloadHidden', downloadHidden);
 
@@ -191,16 +191,15 @@ const extension: JupyterFrontEndPlugin<void> = {
     ): void {
       if (newFormat !== oldFormat) {
         if (
-          newFormat === null ||
-          oldFormat === null ||
-          oldFormat === undefined
+          !newFormat ||
+          !oldFormat
         ) {
           if (oldFormat !== undefined) {
             archiveFolderItem.dispose();
             archiveCurrentFolderItem.dispose();
           }
 
-          if (newFormat === null) {
+          if (!newFormat) {
             archiveFolderItem = app.contextMenu.addItem({
               selector: selectorOnlyDir,
               rank: 10,
@@ -277,9 +276,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       },
-      icon: args => ('format' in args ? '' : archiveIcon),
+      icon: args => ('format' in args ? undefined : archiveIcon),
       label: args => {
-        const format = (args['format'] as ArchiveFormat) || '';
+        const format = (args['format'] as ArchiveFormat) ?? '';
         const label = format.replace('.', ' ').toLocaleUpperCase();
         return label
           ? trans.__('%1 Archive', label)
@@ -302,7 +301,13 @@ const extension: JupyterFrontEndPlugin<void> = {
         const widget = tracker.currentWidget;
         let visible = false;
         if (widget) {
-          const firstItem = widget.selectedItems().next();
+          let firstItem
+          try{
+            firstItem = widget.selectedItems().next().value;
+          } catch(e) {
+            // Lumino v1 API
+            firstItem = widget.selectedItems().next();
+          }
           if (firstItem) {
             const basename = PathExt.basename(firstItem.path);
             const splitName = basename.split('.');
@@ -343,7 +348,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
         }
       },
-      icon: args => ('format' in args ? '' : archiveIcon),
+      icon: args => ('format' in args ? undefined : archiveIcon),
       label: args => {
         const format = (args['format'] as ArchiveFormat) || '';
         const label = format.replace('.', ' ').toLocaleUpperCase();
