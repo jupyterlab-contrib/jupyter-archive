@@ -52,10 +52,7 @@ function downloadArchiveRequest(
   const fullurl = new URL(url);
 
   // Generate a random token.
-  const rand = (): string =>
-    Math.random()
-      .toString(36)
-      .slice(2);
+  const rand = (): string => Math.random().toString(36).slice(2);
   const token = (length: number): string =>
     (rand() + rand() + rand() + rand()).slice(0, length);
 
@@ -190,10 +187,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       oldFormat: ArchiveFormat
     ): void {
       if (newFormat !== oldFormat) {
-        if (
-          !newFormat ||
-          !oldFormat
-        ) {
+        if (!newFormat || !oldFormat) {
           if (oldFormat !== undefined) {
             archiveFolderItem.dispose();
             archiveCurrentFolderItem.dispose();
@@ -301,10 +295,10 @@ const extension: JupyterFrontEndPlugin<void> = {
         const widget = tracker.currentWidget;
         let visible = false;
         if (widget) {
-          let firstItem
-          try{
+          let firstItem;
+          try {
             firstItem = widget.selectedItems().next().value;
-          } catch(e) {
+          } catch (e) {
             // Lumino v1 API
             firstItem = widget.selectedItems().next();
           }

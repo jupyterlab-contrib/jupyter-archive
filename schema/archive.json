@@ -4,7 +4,18 @@
   "description": "Archive handler options.",
   "properties": {
     "format": {
-      "enum": ["", "zip", "tgz", "tar.gz","tbz", "tbz2", "tar.bz", "tar.bz2","txz", "tar.xz"],
+      "enum": [
+        "",
+        "zip",
+        "tgz",
+        "tar.gz",
+        "tbz",
+        "tbz2",
+        "tar.bz",
+        "tar.bz2",
+        "txz",
+        "tar.xz"
+      ],
       "title": "Archive format",
       "description": "Archive format for compressing folder; one of ['' (submenu), 'zip', 'tgz', 'tar.gz', 'tbz', 'tbz2', 'tar.bz', 'tar.bz2', 'txz', 'tar.xz']",
       "default": "zip"
