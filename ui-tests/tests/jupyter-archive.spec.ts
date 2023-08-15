@@ -47,20 +47,20 @@ test('should download the current folder as an archive', async ({ page }) => {
 });
 
 test('should extract an archive', async ({ baseURL, page, tmpPath }) => {
-  try {
-    const contents = galata.newContentsHelper(page.request);
-    await contents.uploadFile(
-      path.resolve(__dirname, `./data/${fileName}`),
-      `${tmpPath}/${fileName}`
-    );
-  } catch {
-    // @ts-expect-error Fall back for Lab 3.6
-    const contents = galata.newContentsHelper(baseURL, page);
-    await contents.uploadFile(
-      path.resolve(__dirname, `./data/${fileName}`),
-      `${tmpPath}/${fileName}`
-    );
+  const skip = await page.evaluate(() => {
+    return window.jupyterapp.version.startsWith('3.');
+  });
+
+  if (skip) {
+    console.log('Test skipped');
+    return;
   }
+
+  const contents = galata.newContentsHelper(page.request);
+  await contents.uploadFile(
+    path.resolve(__dirname, `./data/${fileName}`),
+    `${tmpPath}/${fileName}`
+  );
 
   await page.getByRole('listitem', { name: 'folder.tar.xz' }).click({
     button: 'right'
