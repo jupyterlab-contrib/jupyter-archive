@@ -171,7 +171,7 @@ jobs:
     - name: Install the extension
       run: |
         set -eux
-        python -m pip install "notebook~=7.0" jupyterlab_tour*.whl
+        python -m pip install "notebook~=7.0" jupyter_archive*.whl
 
     - name: Install dependencies
       working-directory: ui-tests
