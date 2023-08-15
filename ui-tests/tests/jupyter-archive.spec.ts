@@ -3,7 +3,7 @@ import * as path from 'path';
 
 const fileName = 'folder.tar.xz';
 
-if (process.env.IS_NOTEBOOK){
+if (process.env.IS_NOTEBOOK) {
   test.use({
     waitForApplication: async ({ baseURL }, use, testInfo) => {
       const waitIsReady = async (page): Promise<void> => {

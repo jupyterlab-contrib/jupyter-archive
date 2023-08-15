@@ -4,13 +4,13 @@
 const baseConfig = require('@jupyterlab/galata/lib/playwright-config');
 
 // Trick to customize the fixture `waitForApplication`
-process.env.IS_NOTEBOOK='1';
+process.env.IS_NOTEBOOK = '1';
 
 module.exports = {
   ...baseConfig,
   use: {
     ...baseConfig.use,
-    appPath: '',
+    appPath: ''
   },
   webServer: {
     command: 'jlpm start',
