@@ -16,7 +16,7 @@ import { archiveIcon, unarchiveIcon } from './icon';
 const DIRECTORIES_URL = 'directories';
 const EXTRACT_ARCHIVE_URL = 'extract-archive';
 type ArchiveFormat =
-  | null
+  | ''
   | 'zip'
   | 'tgz'
   | 'tar.gz'
@@ -39,7 +39,7 @@ function downloadArchiveRequest(
   archiveFormat: ArchiveFormat,
   followSymlinks: string,
   downloadHidden: string
-): Promise<void> {
+): void {
   const settings = ServerConnection.makeSettings();
 
   const baseUrl = settings.baseUrl;
@@ -52,12 +52,9 @@ function downloadArchiveRequest(
   const fullurl = new URL(url);
 
   // Generate a random token.
-  const rand = (): string =>
-    Math.random()
-      .toString(36)
-      .substr(2);
+  const rand = (): string => Math.random().toString(36).slice(2);
   const token = (length: number): string =>
-    (rand() + rand() + rand() + rand()).substr(0, length);
+    (rand() + rand() + rand() + rand()).slice(0, length);
 
   fullurl.searchParams.append('archiveToken', token(20));
   fullurl.searchParams.append('archiveFormat', archiveFormat);
@@ -85,11 +82,9 @@ function downloadArchiveRequest(
     element.click();
     document.body.removeChild(element);
   }
-
-  return void 0;
 }
 
-function extractArchiveRequest(path: string): Promise<void> {
+async function extractArchiveRequest(path: string): Promise<void> {
   const settings = ServerConnection.makeSettings();
 
   const baseUrl = settings.baseUrl;
@@ -105,14 +100,12 @@ function extractArchiveRequest(path: string): Promise<void> {
   url = fullurl.toString();
   const request = { method: 'GET' };
 
-  return ServerConnection.makeRequest(url, request, settings).then(response => {
-    if (response.status !== 200) {
-      response.json().then(data => {
-        showErrorMessage('Fail to extract the archive file', data.reason);
-        throw new ServerConnection.ResponseError(response);
-      });
-    }
-  });
+  const response = await ServerConnection.makeRequest(url, request, settings);
+  if (response.status !== 200) {
+    const data = await response.json();
+    showErrorMessage('Fail to extract the archive file', data.reason);
+    throw new ServerConnection.ResponseError(response);
+  }
 }
 
 /**
@@ -194,17 +187,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       oldFormat: ArchiveFormat
     ): void {
       if (newFormat !== oldFormat) {
-        if (
-          newFormat === null ||
-          oldFormat === null ||
-          oldFormat === undefined
-        ) {
+        if (!newFormat || !oldFormat) {
           if (oldFormat !== undefined) {
             archiveFolderItem.dispose();
             archiveCurrentFolderItem.dispose();
           }
 
-          if (newFormat === null) {
+          if (!newFormat) {
             archiveFolderItem = app.contextMenu.addItem({
               selector: selectorOnlyDir,
               rank: 10,
@@ -281,9 +270,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       },
-      icon: args => ('format' in args ? '' : archiveIcon),
+      icon: args => ('format' in args ? undefined : archiveIcon),
       label: args => {
-        const format = (args['format'] as ArchiveFormat) || '';
+        const format = (args['format'] as ArchiveFormat) ?? '';
         const label = format.replace('.', ' ').toLocaleUpperCase();
         return label
           ? trans.__('%1 Archive', label)
@@ -306,7 +295,13 @@ const extension: JupyterFrontEndPlugin<void> = {
         const widget = tracker.currentWidget;
         let visible = false;
         if (widget) {
-          const firstItem = widget.selectedItems().next();
+          let firstItem;
+          try {
+            firstItem = widget.selectedItems().next().value;
+          } catch (e) {
+            // Lumino v1 API
+            firstItem = widget.selectedItems().next();
+          }
           if (firstItem) {
             const basename = PathExt.basename(firstItem.path);
             const splitName = basename.split('.');
@@ -347,7 +342,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
         }
       },
-      icon: args => ('format' in args ? '' : archiveIcon),
+      icon: args => ('format' in args ? undefined : archiveIcon),
       label: args => {
         const format = (args['format'] as ArchiveFormat) || '';
         const label = format.replace('.', ' ').toLocaleUpperCase();
