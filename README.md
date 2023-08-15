@@ -7,7 +7,7 @@
 [![PyPI](https://img.shields.io/pypi/v/jupyter-archive)](https://pypi.org/project/jupyter-archive/)
 [![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/jupyter-archive)](https://anaconda.org/conda-forge/jupyter-archive)
 
-A Jupyterlab extension to make, download and extract archive files.
+A Jupyter extension to make, download and extract archive files.
 
 Features:
 
@@ -44,7 +44,7 @@ You can also set new values with the following environment variables:
 
 ## Requirements
 
-- JupyterLab >= 3.0
+- JupyterLab >= 3.0 or Notebook >= 7.0
 
 For JupyterLab 2.x, have look [there](https://github.com/jupyterlab-contrib/jupyter-archive/tree/2.x).
 
