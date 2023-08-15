@@ -46,7 +46,10 @@ test('should extract an archive', async ({ page, tmpPath }) => {
     button: 'right'
   });
   await page.getByText('Extract Archive').click();
-  await page.getByText('folder', { exact: true }).click();
+  await page.getByRole('button', { name: 'Refresh the file browser.' }).click();
+  await page.getByText('schema', { exact: true }).dblclick();
+
+  await expect(page.getByText('archive.json')).toHaveCount(1);
 });
 
 test.describe('submenu', () => {
@@ -69,6 +72,6 @@ test.describe('submenu', () => {
     });
 
     await page.getByText('Download As').click();
-    await expect(page.getByText('Archive')).toHaveCount(4);
+    await expect(page.getByText(/^[\w\s]+\sArchive$/)).toHaveCount(4);
   });
 });
