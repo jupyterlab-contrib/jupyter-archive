@@ -3,6 +3,17 @@ import * as path from 'path';
 
 const fileName = 'folder.tar.xz';
 
+if (process.env.IS_NOTEBOOK){
+  test.use({
+    waitForApplication: async ({ baseURL }, use, testInfo) => {
+      const waitIsReady = async (page): Promise<void> => {
+        await page.waitForSelector('#main-panel');
+      };
+      await use(waitIsReady);
+    }
+  });
+}
+
 test('should download a folder as an archive', async ({ page }) => {
   await page.locator('.jp-DirListing-content').click({
     button: 'right'
