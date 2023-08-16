@@ -5,8 +5,11 @@
     "private": true,
     "scripts": {
         "start": "jupyter lab --config jupyter_server_test_config.py",
+        "start:notebook": "jupyter notebook --config jupyter_server_test_config.py",
         "test": "jlpm playwright test",
-        "test:update": "jlpm playwright test --update-snapshots"
+        "test:notebook": "jlpm playwright test -c playwright-notebook.config.js",
+        "test:update": "jlpm playwright test --update-snapshots",
+        "test:notebook:update": "jlpm playwright test -c playwright-notebook.config.js --update-snapshots"
     },
     "devDependencies": {
         "@jupyterlab/galata": "^5.0.5",
