@@ -13,8 +13,8 @@ module.exports = {
     appPath: ''
   },
   webServer: {
-    command: 'jlpm start',
-    url: 'http://localhost:8888/lab',
+    command: 'jlpm start:notebook',
+    url: 'http://localhost:8888/tree',
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI
   }
