@@ -1,3 +1,4 @@
+import io
 import platform
 import shutil
 import tarfile
@@ -207,6 +208,34 @@ async def test_extract_failure(jp_fetch, jp_root_dir, format, mode):
         await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
     assert e.type == HTTPClientError
     assert not archive_dir_path.exists()
+
+
+async def test_extract_symlink_traversal(jp_fetch, jp_root_dir, tmp_path):
+    if platform.system() == "Windows":
+        pytest.skip("Symlinks not working on Windows")
+
+    # A malicious archive that first creates a symlink escaping the extraction
+    # directory, then writes a file through it.
+    outside_target = tmp_path / "outside"
+    outside_target.mkdir()
+    escaped_file = outside_target / "escaped.txt"
+
+    archive_path = jp_root_dir / "malicious.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as tf:
+        link = tarfile.TarInfo("escape")
+        link.type = tarfile.SYMTYPE
+        link.linkname = str(outside_target)
+        tf.addfile(link)
+
+        data = b"pwned"
+        member = tarfile.TarInfo("escape/escaped.txt")
+        member.size = len(data)
+        tf.addfile(member, io.BytesIO(data))
+
+    with pytest.raises(HTTPClientError) as e:
+        await jp_fetch("extract-archive", archive_path.relative_to(jp_root_dir).as_posix(), method="GET")
+    assert e.value.code == 400
+    assert not escaped_file.exists()
 
 
 @pytest.mark.parametrize(
