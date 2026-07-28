@@ -249,9 +249,8 @@ class ExtractArchiveHandler(JupyterHandler):
                 else:
                     archive.extractall(archive_destination)
         except tarfile.FilterError as error:
-            error_message = f"The archive file includes an unsafe member: {error.tarinfo.name}"
-            self.log.error(error_message)
-            raise web.HTTPError(400, reason=error_message)
+            self.log.error("The archive file includes an unsafe member: %s", error.tarinfo.name)
+            raise web.HTTPError(400, reason="The archive file includes an unsafe member")
 
         self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))
 
