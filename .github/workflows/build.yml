@@ -80,6 +80,8 @@ jobs:
 
         pip install "jupyterlab>=4.0.0,<5" jupyter_archive*.whl
 
+        jupyter server extension list
+        jupyter server extension list 2>&1 | grep -ie "jupyter_archive.*OK"
 
         jupyter labextension list
         jupyter labextension list 2>&1 | grep -ie "@hadim/jupyter-archive.*OK"
