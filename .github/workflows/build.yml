@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: '*'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -60,9 +64,9 @@ jobs:
 
     steps:
     - name: Install Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.10'
         architecture: 'x64'
     - uses: actions/download-artifact@v4
       with:
@@ -75,7 +79,6 @@ jobs:
         sudo rm -rf $(which node)
 
         pip install "jupyterlab>=4.0.0,<5" jupyter_archive*.whl
-
 
         jupyter server extension list
         jupyter server extension list 2>&1 | grep -ie "jupyter_archive.*OK"
@@ -176,6 +179,7 @@ jobs:
     - name: Install dependencies
       working-directory: ui-tests
       env:
+        YARN_ENABLE_IMMUTABLE_INSTALLS: 0
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
       run: |
         jlpm install
@@ -188,7 +192,9 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('ui-tests/yarn.lock') }}
 
     - name: Install browser
-      run: jlpm playwright install chromium
+      run: |
+        set -eux
+        jlpm playwright install chromium --only-shell
       working-directory: ui-tests
 
     - name: Execute integration tests

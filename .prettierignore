@@ -4,3 +4,5 @@ node_modules
 **/package.json
 !/package.json
 jupyter_archive
+eslint.config.mjs
+.venv
