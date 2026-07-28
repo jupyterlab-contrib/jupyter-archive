@@ -1,20 +1,17 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v4.1.0
+_commit: v4.6.2
 _src_path: https://github.com/jupyterlab/extension-template
-author_email: 'Hadrien Mary'
-author_name: 'hadrien.mary@gmail.com'
-data_format: string
-file_extension: ''
+advanced: false
+author_email: hadrien.mary@gmail.com
+author_name: Hadrien Mary
+has_ai_rules: false
 has_binder: true
 has_settings: true
-kind: server
+kind: frontend-and-server
 labextension_name: '@hadim/jupyter-archive'
-mimetype: ''
-mimetype_name: ''
 project_short_description: A Jupyterlab extension to make, download and extract archive
     files.
 python_name: jupyter_archive
 repository: https://github.com/jupyterlab-contrib/jupyter-archive.git
 test: true
-viewer_name: ''
 
