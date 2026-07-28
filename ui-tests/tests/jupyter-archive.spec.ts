@@ -67,11 +67,6 @@ test('should extract an archive', async ({ baseURL, page, tmpPath }) => {
   });
   await page.getByText('Extract Archive').click();
 
-  // Reveal the extracted folder. JupyterLab's file browser has a refresh button
-  // (scope to the inner <button> via role — the aria-label is duplicated on the
-  // <jp-button> wrapper, which makes getByLabel match two elements); Notebook 7
-  // has no such button and relies on the file browser auto-refresh, so only
-  // click it when present.
   const refresh = page.getByRole('button', {
     name: 'Refresh the file browser.'
   });
