@@ -2,7 +2,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python>=3.9
+  - python>=3.10
   - pytest
   - jupyterlab>=3.0.0,<4.0.0
   - nodejs
