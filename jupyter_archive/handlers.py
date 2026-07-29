@@ -239,22 +239,18 @@ class ExtractArchiveHandler(JupyterHandler):
         archive_destination = archive_path.parent
         self.log.info("Begin extraction of {} to {}.".format(archive_path, archive_destination))
 
-        archive_reader = make_reader(archive_path)
-
-        if isinstance(archive_reader, tarfile.TarFile):
-            # Check file path to avoid path traversal
-            # See https://nvd.nist.gov/vuln/detail/CVE-2007-4559
-            with archive_reader as archive:
-                for name in archive_reader.getnames():
-                    if os.path.relpath(archive_destination / name, archive_destination).startswith(os.pardir):
-                        error_message = f"The archive file includes an unsafe file path: {name}"
-                        self.log.error(error_message)
-                        raise web.HTTPError(400, reason=error_message)
-            # Re-open stream
-            archive_reader = make_reader(archive_path)
-
-        with archive_reader as archive:
-            archive.extractall(archive_destination)
+        try:
+            with make_reader(archive_path) as archive:
+                if isinstance(archive, tarfile.TarFile):
+                    # The "data" filter rejects unsafe members (absolute paths,
+                    # path traversal and symlinks/hardlinks escaping the destination).
+                    # See https://docs.python.org/3/library/tarfile.html#extraction-filters
+                    archive.extractall(archive_destination, filter="data")
+                else:
+                    archive.extractall(archive_destination)
+        except tarfile.FilterError as error:
+            self.log.error("The archive file includes an unsafe member: %s", error.tarinfo.name)
+            raise web.HTTPError(400, reason="The archive file includes an unsafe member")
 
         self.log.info("Finished extracting {} to {}.".format(archive_path, archive_destination))
 

@@ -2,7 +2,8 @@ channels:
   - conda-forge
 
 dependencies:
-  - python>=3.6
+  # Mirrors requires-python in pyproject.toml
+  - "python>=3.10.12,<3.11|>=3.11.4"
   - pytest
   - jupyterlab>=3.0.0,<4.0.0
   - nodejs
