@@ -1896,7 +1896,7 @@ __metadata:
   resolution: "@hadim/jupyter-archive@workspace:."
   dependencies:
     "@eslint/js": ^9.0.0
-    "@jupyter/builder": ^1.0.0
+    "@jupyter/builder": ^1.2.0
     "@jupyter/eslint-plugin": ^0.0.5
     "@jupyterlab/application": ^4.0.3
     "@jupyterlab/apputils": ^4.1.3
@@ -2341,11 +2341,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/builder@npm:^1.0.0":
-  version: 1.1.1
-  resolution: "@jupyter/builder@npm:1.1.1"
+"@jupyter/builder@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@jupyter/builder@npm:1.2.0"
   dependencies:
-    "@jupyterlab/core-meta": 4.6.1
+    "@jupyterlab/core-meta": ^4.6.1
     "@module-federation/runtime-tools": ^2.0.0
     "@rspack/core": ^2.1.2
     ajv: ^8.12.0
@@ -2361,7 +2361,7 @@ __metadata:
     style-loader: ^4.0.0
     supports-color: ^7.2.0
     webpack-merge: ^5.8.0
-  checksum: eb13d5087a2bf776ee18b0b4978ed29a91ef9e5fefe73ac995fd2afbc429aad1622cbff7b543e05562b5a712fa7713ffa9d8575a9cf95a3bb00b7c8b39fe4de7
+  checksum: 82af576cd139bc08918cb0bfbf2bf0c2d230c281978a76e75b77d7af91b85d69cd0fc616a2c4a6f9b0c338dc0965c526a619884e17879bcb0249620aa5ed0a36
   languageName: node
   linkType: hard
 
@@ -2562,10 +2562,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/core-meta@npm:4.6.1":
-  version: 4.6.1
-  resolution: "@jupyterlab/core-meta@npm:4.6.1"
-  checksum: 8f91135b66806b65db81c4371dae36f794b476a869810b2c99ac243a94fc6a55a392a2dfbb2a93b5c225f4f45b5f50e43fa5641e68d15fa71db3c570cead161d
+"@jupyterlab/core-meta@npm:^4.6.1":
+  version: 4.6.2
+  resolution: "@jupyterlab/core-meta@npm:4.6.2"
+  checksum: d38054d6f4a5376d4a8ee79b4771050d6e48104632f662a2003451bda5c0f84cc2ebbca0405a4d3dff938460e9b684f3581562a465dc4243758d0c8e44c8f559
   languageName: node
   linkType: hard
 

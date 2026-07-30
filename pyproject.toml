@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.5.0", "hatch-nodejs-version>=0.3.2", "jupyter-builder>=1.0.0,<2"]
+requires = ["hatchling>=1.5.0", "hatch-nodejs-version>=0.3.2", "jupyter-builder>=1.2.0,<2"]
 build-backend = "hatchling.build"
 
 [project]
@@ -40,7 +40,7 @@ test = [
 ]
 dev = [
     "jupyterlab>=4",
-    "jupyter-builder>=1.0.0",
+    "jupyter-builder>=1.2.0",
 ]
 
 [tool.hatch.version]
@@ -85,7 +85,7 @@ version_cmd = "hatch version"
 
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
-    "python -m pip install 'jupyter-builder>=1.0.0,<2'",
+    "python -m pip install 'jupyter-builder>=1.2.0,<2'",
     "jlpm",
     "jlpm build:prod"
 ]
