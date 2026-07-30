@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 3.5.1
+
+([Full Changelog](https://github.com/jupyterlab-contrib/jupyter-archive/compare/v3.5.0...2905137d2d816663d8bbffdd40fd5bd8a36fc6fe))
+
+### Maintenance and upkeep improvements
+
+- Update jupyter-builder to 1.2.0, drop unneccessary webpack pin [#180](https://github.com/jupyterlab-contrib/jupyter-archive/pull/180) ([@krassowski](https://github.com/krassowski))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab-contrib/jupyter-archive/graphs/contributors?from=2026-07-29&to=2026-07-30&type=c))
+
+@krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3Akrassowski+updated%3A2026-07-29..2026-07-30&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 3.5.0
 
 ([Full Changelog](https://github.com/jupyterlab-contrib/jupyter-archive/compare/v3.4.0...7076fd3c5366ee2f9499d49e15f225836e78c51a))
@@ -68,8 +87,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab-contrib/jupyter-archive/graphs/contributors?from=2023-08-15&to=2026-07-29&type=c))
 
 @Carreau ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3ACarreau+updated%3A2023-08-15..2026-07-29&type=Issues)) | @claude ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3Aclaude+updated%3A2023-08-15..2026-07-29&type=Issues)) | @fcollonval ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3Afcollonval+updated%3A2023-08-15..2026-07-29&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3Akrassowski+updated%3A2023-08-15..2026-07-29&type=Issues)) | @Yann-P ([activity](https://github.com/search?q=repo%3Ajupyterlab-contrib%2Fjupyter-archive+involves%3AYann-P+updated%3A2023-08-15..2026-07-29&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 3.4.0
 
