@@ -7,11 +7,74 @@ import traceback
 import zipfile
 import threading
 from http.client import responses
+import shutil
+from zipfile import ZipFile
+from zipfile import ZipInfo
 
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.utils import url2path, url_path_join, ensure_async
 from tornado import ioloop, web
 from urllib.parse import quote
+
+
+class CompatibleZipFile(ZipFile):
+    """Compatible ZipFile for mac(utf-8) and chinese windows(gbk)"""
+
+    def _extract_member(self, member, targetpath, pwd):
+        def try_macos_decode(fn):
+            try:
+                return fn.encode("cp437").decode("utf-8")
+            except UnicodeError:
+                return None
+
+        def try_windows_chinese_decode(fn):
+            try:
+                return fn.encode("cp437").decode("gbk")
+            except UnicodeError:
+                return None
+
+        if not isinstance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        # build the destination pathname, replacing
+        # forward slashes to platform specific separators.
+        arcname = member.filename.replace('/', os.path.sep)
+        # Compatible patch here
+        new_arcname = try_macos_decode(arcname) or try_windows_chinese_decode(arcname)
+        if new_arcname:
+            arcname = new_arcname
+
+        if os.path.altsep:
+            arcname = arcname.replace(os.path.altsep, os.path.sep)
+        # interpret absolute pathname as relative, remove drive letter or
+        # UNC path, redundant separators, "." and ".." components.
+        arcname = os.path.splitdrive(arcname)[1]
+        invalid_path_parts = ('', os.path.curdir, os.path.pardir)
+        arcname = os.path.sep.join(x for x in arcname.split(os.path.sep)
+                                   if x not in invalid_path_parts)
+        if os.path.sep == '\\':
+            # filter illegal characters on Windows
+            arcname = self._sanitize_windows_name(arcname, os.path.sep)
+
+        targetpath = os.path.join(targetpath, arcname)
+        targetpath = os.path.normpath(targetpath)
+
+        # Create all upper directories if necessary.
+        upperdirs = os.path.dirname(targetpath)
+        if upperdirs and not os.path.exists(upperdirs):
+            os.makedirs(upperdirs)
+
+        if member.is_dir():
+            if not os.path.isdir(targetpath):
+                os.mkdir(targetpath)
+            return targetpath
+
+        with self.open(member, pwd=pwd) as source, \
+                open(targetpath, "wb") as target:
+            shutil.copyfileobj(source, target)
+
+        return targetpath
+
 
 SUPPORTED_FORMAT = [
     "zip",
@@ -77,11 +140,10 @@ def make_writer(handler, archive_format="zip"):
 
 
 def make_reader(archive_path):
-
     archive_format = "".join(archive_path.suffixes)
 
     if archive_format.endswith(".zip"):
-        archive_file = zipfile.ZipFile(archive_path, mode="r")
+        archive_file = CompatibleZipFile(archive_path, mode="r")
     elif any([archive_format.endswith(ext) for ext in [".tgz", ".tar.gz"]]):
         archive_file = tarfile.open(archive_path, mode="r|gz")
     elif any([archive_format.endswith(ext) for ext in [".tbz", ".tbz2", ".tar.bz", ".tar.bz2"]]):
